@@ -330,6 +330,84 @@
                             </table>
                         </div>
                     </div>
+
+                    <!-- CONFIGURACIÓN DE BIDONES RETORNABLES -->
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-md mt-6">
+                        <div class="mb-4">
+                            <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                Configuración de Bidones Retornables
+                            </h2>
+                            <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                                Configure los parámetros para préstamos de bidones adicionales
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Monto de Depósito -->
+                            <div class="bg-blue-50 dark:bg-blue-900/20 p-5 rounded-xl border-2 border-blue-200 dark:border-blue-800">
+                                <label class="block text-sm font-bold mb-3 text-blue-900 dark:text-blue-300 flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Monto de Depósito por Bidón
+                                </label>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-2xl font-bold text-blue-900 dark:text-blue-300">$</span>
+                                    <input type="number"
+                                           id="container-deposit-amount"
+                                           min="0"
+                                           step="0.50"
+                                           value="5.00"
+                                           class="flex-1 p-3 text-lg font-bold border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:border-blue-600 dark:text-white">
+                                </div>
+                                <p class="text-xs text-blue-700 dark:text-blue-400 mt-2">
+                                    💡 Este monto se cobrará como garantía por cada bidón prestado adicionalmente
+                                </p>
+                            </div>
+
+                            <!-- Límite Máximo -->
+                            <div class="bg-orange-50 dark:bg-orange-900/20 p-5 rounded-xl border-2 border-orange-200 dark:border-orange-800">
+                                <label class="block text-sm font-bold mb-3 text-orange-900 dark:text-orange-300 flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                    </svg>
+                                    Límite Máximo de Bidones Adicionales
+                                </label>
+                                <div class="flex items-center gap-2">
+                                    <input type="number"
+                                           id="container-max-additional"
+                                           min="1"
+                                           max="20"
+                                           value="5"
+                                           class="flex-1 p-3 text-lg font-bold border-2 border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500 dark:bg-slate-700 dark:border-orange-600 dark:text-white">
+                                    <span class="text-lg font-semibold text-orange-900 dark:text-orange-300">bidones</span>
+                                </div>
+                                <p class="text-xs text-orange-700 dark:text-orange-400 mt-2">
+                                    ⚠️ Cantidad máxima que un cliente puede pedir prestados adicionalmente
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Botón Guardar -->
+                        <div class="mt-6 flex justify-end">
+                            <button onclick="saveContainerSettings()"
+                                    class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3 px-8 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition flex items-center gap-2 shadow-lg">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Guardar Configuración
+                            </button>
+                        </div>
+
+                        <!-- Estado de Configuración Actual -->
+                        <div id="container-settings-status" class="mt-4 p-3 bg-slate-100 dark:bg-slate-700 rounded-lg text-sm text-slate-600 dark:text-slate-400">
+                            <span class="font-semibold">Estado:</span> <span id="settings-status-text">Cargando configuración...</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- MÓDULO DE VEHÍCULOS -->
@@ -1441,20 +1519,71 @@
                                             </div>
                                         </div>
 
-                                        <!-- Préstamo de bidones llenos (opcional) -->
-                                        <div class="space-y-2">
-                                            <label class="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400">¿Prestar bidones llenos adicionales?</label>
-                                            <div class="flex items-center gap-3">
-                                                <button type="button" onclick="changeLoanedContainers(-1)" class="bg-red-500 text-white w-10 h-10 rounded-lg hover:bg-red-600 active:scale-95 transition font-bold text-xl">-</button>
-                                                <input type="number" id="loan-containers" value="0" min="0" class="w-20 p-3 text-center text-lg font-bold border-2 rounded-lg dark:bg-slate-700 dark:border-slate-600">
-                                                <button type="button" onclick="changeLoanedContainers(1)" class="bg-green-500 text-white w-10 h-10 rounded-lg hover:bg-green-600 active:scale-95 transition font-bold text-xl">+</button>
-                                                <span class="text-xs text-slate-500 dark:text-slate-400">bidones en préstamo</span>
+                                        <!-- Préstamo de bidones llenos ADICIONALES -->
+                                        <div class="space-y-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-2 border-blue-200 dark:border-blue-700">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                                </svg>
+                                                <label class="text-sm font-bold text-blue-900 dark:text-blue-300">Bidones ADICIONALES en Préstamo</label>
                                             </div>
-                                            <p class="text-xs text-slate-500 dark:text-slate-400">
-                                                💡 Los bidones prestados requieren depósito y se registrarán a nombre del cliente
+
+                                            <p class="text-xs text-blue-700 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 p-2 rounded">
+                                                📦 <strong>¿Qué son?</strong> Bidones EXTRA que el cliente pide prestados temporalmente (además de su rotación normal). <br>
+                                                💡 <strong>Ejemplo:</strong> Cliente devuelve 5 vacíos, recibe 5 llenos + 3 adicionales en préstamo.
                                             </p>
+
+                                            <!-- Cantidad de Bidones Adicionales -->
+                                            <div>
+                                                <label class="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1 block">Cantidad de bidones adicionales:</label>
+                                                <div class="flex items-center gap-3">
+                                                    <button type="button" onclick="changeLoanedContainers(-1)" class="bg-red-500 text-white w-10 h-10 rounded-lg hover:bg-red-600 active:scale-95 transition font-bold text-xl">-</button>
+                                                    <input type="number" id="loan-containers" value="0" min="0" max="5" class="w-20 p-3 text-center text-lg font-bold border-2 border-blue-300 rounded-lg dark:bg-slate-700 dark:border-blue-600" onchange="validateLoanLimit(); updateLoanDepositDisplay();">
+                                                    <button type="button" onclick="changeLoanedContainers(1)" class="bg-green-500 text-white w-10 h-10 rounded-lg hover:bg-green-600 active:scale-95 transition font-bold text-xl">+</button>
+                                                    <span class="text-xs text-slate-600 dark:text-slate-400">bidones (máx. <span id="loan-max-display">5</span>)</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Fecha de Devolución -->
+                                            <div id="loan-return-date-section" class="hidden">
+                                                <label class="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1 block">Fecha de devolución esperada:</label>
+                                                <div class="flex items-center gap-2">
+                                                    <input type="date"
+                                                           id="loan-return-date"
+                                                           class="flex-1 p-2 text-sm border-2 border-blue-300 rounded-lg dark:bg-slate-700 dark:border-blue-600 dark:text-white">
+                                                    <label class="flex items-center gap-1 text-xs cursor-pointer">
+                                                        <input type="checkbox"
+                                                               id="loan-is-comodato"
+                                                               class="w-4 h-4 text-blue-600 rounded"
+                                                               onchange="toggleComodato()">
+                                                        <span class="text-slate-700 dark:text-slate-300 font-medium">Comodato</span>
+                                                    </label>
+                                                </div>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                                    ℹ️ <strong>Comodato:</strong> Sin fecha fija de devolución (préstamo indefinido)
+                                                </p>
+                                            </div>
+
+                                            <!-- Depósito/Garantía -->
+                                            <div id="loan-deposit-display" class="hidden bg-yellow-100 dark:bg-yellow-900/30 p-3 rounded-lg border border-yellow-300 dark:border-yellow-700">
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-sm font-semibold text-yellow-900 dark:text-yellow-300">💰 Depósito/Garantía:</span>
+                                                    <span class="text-lg font-bold text-yellow-900 dark:text-yellow-300">$<span id="loan-deposit-total">0.00</span></span>
+                                                </div>
+                                                <p class="text-xs text-yellow-700 dark:text-yellow-400 mt-1">
+                                                    <span id="loan-deposit-unit">$5.00</span> por bidón × <span id="loan-qty-display">0</span> bidones
+                                                </p>
+                                            </div>
+
+                                            <!-- Advertencias -->
                                             <div id="loan-limit-warning" class="hidden p-2 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded text-xs text-red-700 dark:text-red-300">
                                                 ⚠️ <span id="loan-limit-message"></span>
+                                            </div>
+
+                                            <!-- Info de bidones actualmente prestados -->
+                                            <div id="client-current-loans-info" class="hidden p-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-300 dark:border-orange-700 rounded text-xs">
+                                                <span class="font-semibold text-orange-900 dark:text-orange-300">📊 Este cliente ya tiene:</span>
+                                                <span class="font-bold text-orange-900 dark:text-orange-300 text-lg ml-1"><span id="client-current-loans-count">0</span> bidones prestados</span>
                                             </div>
                                         </div>
                                     </div>
@@ -1840,7 +1969,9 @@
                                                 <th class="py-3 px-4 text-left text-xs font-semibold">Fecha Préstamo</th>
                                                 <th class="py-3 px-4 text-left text-xs font-semibold">Cliente</th>
                                                 <th class="py-3 px-4 text-left text-xs font-semibold">Cantidad</th>
+                                                <th class="py-3 px-4 text-left text-xs font-semibold">Depósito</th>
                                                 <th class="py-3 px-4 text-left text-xs font-semibold">Días Prestado</th>
+                                                <th class="py-3 px-4 text-left text-xs font-semibold">Fecha Esperada</th>
                                                 <th class="py-3 px-4 text-left text-xs font-semibold">Estado</th>
                                                 <th class="py-3 px-4 text-left text-xs font-semibold">Fecha Devolución</th>
                                             </tr>
@@ -3781,7 +3912,7 @@
 
     const views = ['auth-view', 'admin-view', 'seller-view'];
     
-    function showView(viewId) { views.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); }); const targetViewEl = document.getElementById(`${viewId}-view`); if (targetViewEl) targetViewEl.classList.remove('hidden'); const sellerViewEl = document.getElementById('seller-view'); if (sellerViewEl) { viewId === 'seller' ? sellerViewEl.classList.add('flex') : sellerViewEl.classList.remove('flex'); } if (viewId === 'admin') { updateAdminDashboard(); } if (viewId === 'seller') { checkCashRegisterStatus(); updateSellerDashboard(); if(viewId === 'seller-credit-accounts') renderCreditAccounts(); } }
+    function showView(viewId) { views.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); }); const targetViewEl = document.getElementById(`${viewId}-view`); if (targetViewEl) targetViewEl.classList.remove('hidden'); const sellerViewEl = document.getElementById('seller-view'); if (sellerViewEl) { viewId === 'seller' ? sellerViewEl.classList.add('flex') : sellerViewEl.classList.remove('flex'); } if (viewId === 'admin') { updateAdminDashboard(); } if (viewId === 'seller') { checkCashRegisterStatus(); updateSellerDashboard(); loadContainerSettings(); if(viewId === 'seller-credit-accounts') renderCreditAccounts(); } }
     const loginForm = document.getElementById('login-form');
     const authError = document.getElementById('auth-error');
     
@@ -4984,7 +5115,7 @@
             });
     }
 
-    function setupTabNavigation(tabsContainerId, contentContainerId) { const tabsContainer = document.getElementById(tabsContainerId); if (!tabsContainer) return; tabsContainer.querySelectorAll('.tab-button').forEach(tab => { tab.addEventListener('click', () => { tabsContainer.querySelectorAll('.tab-button').forEach(t => t.classList.remove('active')); tab.classList.add('active'); const targetId = tab.dataset.target; Array.from(document.getElementById(contentContainerId).children).forEach(content => { content.classList.toggle('hidden', content.id !== targetId); }); if (targetId === 'admin-clients') { loadAdminClientsModule(); } if (targetId === 'admin-visits') { loadAdminVisitsModule(); } if (targetId === 'admin-whatsapp-templates') { loadWhatsAppTemplatesModule(); } if (targetId === 'admin-vehicles') { populateVehicleSellerDropdown(); } if (targetId === 'admin-losses') { loadAdminLossesPending(); loadAdminLossesHistory(); calculateLossesStats(); populateLossesSellerFilter(); } if (targetId === 'admin-transfers') { loadAdminTransfersPending(); loadAdminTransfersHistory(); calculateTransfersStats(); populateTransfersRequesterFilter(); } }); }); }
+    function setupTabNavigation(tabsContainerId, contentContainerId) { const tabsContainer = document.getElementById(tabsContainerId); if (!tabsContainer) return; tabsContainer.querySelectorAll('.tab-button').forEach(tab => { tab.addEventListener('click', () => { tabsContainer.querySelectorAll('.tab-button').forEach(t => t.classList.remove('active')); tab.classList.add('active'); const targetId = tab.dataset.target; Array.from(document.getElementById(contentContainerId).children).forEach(content => { content.classList.toggle('hidden', content.id !== targetId); }); if (targetId === 'admin-products') { loadContainerSettingsForAdmin(); } if (targetId === 'admin-clients') { loadAdminClientsModule(); } if (targetId === 'admin-visits') { loadAdminVisitsModule(); } if (targetId === 'admin-whatsapp-templates') { loadWhatsAppTemplatesModule(); } if (targetId === 'admin-vehicles') { populateVehicleSellerDropdown(); } if (targetId === 'admin-losses') { loadAdminLossesPending(); loadAdminLossesHistory(); calculateLossesStats(); populateLossesSellerFilter(); } if (targetId === 'admin-transfers') { loadAdminTransfersPending(); loadAdminTransfersHistory(); calculateTransfersStats(); populateTransfersRequesterFilter(); } }); }); }
 
     function setupClientsTabNavigation() {
         const tabsContainer = document.getElementById('clients-tabs');
@@ -5821,6 +5952,80 @@
             dailyContent.innerHTML = '<p class="text-red-500">Error al cargar meta diaria</p>';
             monthlyContent.innerHTML = '<p class="text-red-500">Error al cargar meta mensual</p>';
             yearlyContent.innerHTML = '<p class="text-red-500">Error al cargar meta anual</p>';
+        }
+    }
+
+    // ===== FUNCIONES DE CONFIGURACIÓN DE BIDONES =====
+
+    async function saveContainerSettings() {
+        try {
+            const depositAmount = parseFloat(document.getElementById('container-deposit-amount')?.value) || 5.00;
+            const maxAdditional = parseInt(document.getElementById('container-max-additional')?.value) || 5;
+
+            // Validar valores
+            if (depositAmount < 0 || maxAdditional < 1 || maxAdditional > 20) {
+                alert('❌ Valores inválidos. Por favor verifica:\n- Depósito debe ser mayor a 0\n- Límite debe estar entre 1 y 20');
+                return;
+            }
+
+            const configData = {
+                depositAmount: depositAmount,
+                maxAdditional: maxAdditional,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedBy: auth.currentUser.uid
+            };
+
+            // Guardar en Firestore
+            await db_firestore.collection('settings').doc('container_config').set(configData, { merge: true });
+
+            // Actualizar variable global
+            containerSettings.depositAmount = depositAmount;
+            containerSettings.maxAdditional = maxAdditional;
+
+            // Actualizar UI
+            const statusText = document.getElementById('settings-status-text');
+            if (statusText) {
+                statusText.textContent = `✅ Configuración guardada: Depósito $${depositAmount.toFixed(2)}, Máximo ${maxAdditional} bidones`;
+                statusText.parentElement.classList.remove('bg-slate-100', 'dark:bg-slate-700');
+                statusText.parentElement.classList.add('bg-green-100', 'dark:bg-green-900/30');
+
+                setTimeout(() => {
+                    statusText.parentElement.classList.remove('bg-green-100', 'dark:bg-green-900/30');
+                    statusText.parentElement.classList.add('bg-slate-100', 'dark:bg-slate-700');
+                }, 3000);
+            }
+
+            console.log('✅ Configuración de bidones guardada:', configData);
+            alert('✅ Configuración guardada exitosamente');
+        } catch (error) {
+            console.error('Error guardando configuración:', error);
+            alert('❌ Error al guardar configuración: ' + error.message);
+        }
+    }
+
+    async function loadContainerSettingsForAdmin() {
+        try {
+            const settingsDoc = await db_firestore.collection('settings').doc('container_config').get();
+
+            if (settingsDoc.exists) {
+                const data = settingsDoc.data();
+                document.getElementById('container-deposit-amount').value = data.depositAmount || 5.00;
+                document.getElementById('container-max-additional').value = data.maxAdditional || 5;
+
+                const statusText = document.getElementById('settings-status-text');
+                if (statusText) {
+                    statusText.textContent = `Depósito: $${(data.depositAmount || 5.00).toFixed(2)}, Máximo: ${data.maxAdditional || 5} bidones`;
+                }
+            } else {
+                // Crear configuración por defecto
+                await saveContainerSettings();
+            }
+        } catch (error) {
+            console.error('Error cargando configuración:', error);
+            const statusText = document.getElementById('settings-status-text');
+            if (statusText) {
+                statusText.textContent = '⚠️ Error al cargar. Usando valores por defecto.';
+            }
         }
     }
 
@@ -9827,13 +10032,89 @@
         }
     }
 
+    // Variable global para configuración de bidones
+    let containerSettings = {
+        depositAmount: 5.00,
+        maxAdditional: 5
+    };
+
+    // Cargar configuración de bidones desde Firestore
+    async function loadContainerSettings() {
+        try {
+            const settingsDoc = await db_firestore.collection('settings').doc('container_config').get();
+            if (settingsDoc.exists) {
+                const data = settingsDoc.data();
+                containerSettings.depositAmount = data.depositAmount || 5.00;
+                containerSettings.maxAdditional = data.maxAdditional || 5;
+
+                // Actualizar UI
+                document.getElementById('loan-max-display').textContent = containerSettings.maxAdditional;
+                document.getElementById('loan-containers')?.setAttribute('max', containerSettings.maxAdditional);
+                updateLoanDepositDisplay();
+
+                console.log('✅ Configuración de bidones cargada:', containerSettings);
+            }
+        } catch (error) {
+            console.warn('⚠️ No se pudo cargar configuración de bidones, usando valores por defecto:', error);
+        }
+    }
+
     function changeLoanedContainers(delta) {
         const input = document.getElementById('loan-containers');
         if (input) {
             const currentQty = parseInt(input.value) || 0;
-            const newQty = Math.max(0, currentQty + delta);
+            const newQty = Math.max(0, Math.min(containerSettings.maxAdditional, currentQty + delta));
             input.value = newQty;
             validateLoanLimit();
+            updateLoanDepositDisplay();
+        }
+    }
+
+    function toggleComodato() {
+        const checkbox = document.getElementById('loan-is-comodato');
+        const dateInput = document.getElementById('loan-return-date');
+
+        if (checkbox?.checked) {
+            dateInput.disabled = true;
+            dateInput.value = '';
+            dateInput.classList.add('opacity-50');
+        } else {
+            dateInput.disabled = false;
+            dateInput.classList.remove('opacity-50');
+            // Sugerir fecha: 7 días desde hoy
+            const suggestedDate = new Date();
+            suggestedDate.setDate(suggestedDate.getDate() + 7);
+            dateInput.value = suggestedDate.toISOString().split('T')[0];
+        }
+    }
+
+    function updateLoanDepositDisplay() {
+        const loanQty = parseInt(document.getElementById('loan-containers')?.value) || 0;
+        const depositDisplay = document.getElementById('loan-deposit-display');
+        const dateSection = document.getElementById('loan-return-date-section');
+        const depositTotal = document.getElementById('loan-deposit-total');
+        const depositUnit = document.getElementById('loan-deposit-unit');
+        const qtyDisplay = document.getElementById('loan-qty-display');
+
+        if (loanQty > 0) {
+            const totalDeposit = loanQty * containerSettings.depositAmount;
+            depositTotal.textContent = totalDeposit.toFixed(2);
+            depositUnit.textContent = `$${containerSettings.depositAmount.toFixed(2)}`;
+            qtyDisplay.textContent = loanQty;
+
+            depositDisplay?.classList.remove('hidden');
+            dateSection?.classList.remove('hidden');
+
+            // Sugerir fecha por defecto si no hay una
+            const dateInput = document.getElementById('loan-return-date');
+            if (!dateInput.value && !document.getElementById('loan-is-comodato')?.checked) {
+                const suggestedDate = new Date();
+                suggestedDate.setDate(suggestedDate.getDate() + 7);
+                dateInput.value = suggestedDate.toISOString().split('T')[0];
+            }
+        } else {
+            depositDisplay?.classList.add('hidden');
+            dateSection?.classList.add('hidden');
         }
     }
 
@@ -9849,6 +10130,13 @@
         }
 
         try {
+            // Validar máximo configurado
+            if (loanQty > containerSettings.maxAdditional) {
+                warningDiv?.classList.remove('hidden');
+                messageSpan.textContent = `El máximo permitido es ${containerSettings.maxAdditional} bidones adicionales.`;
+                return false;
+            }
+
             // Obtener datos del cliente
             const clientDoc = await db_firestore.collection('clients').doc(currentSelectedClient).get();
             if (!clientDoc.exists) {
@@ -9886,7 +10174,7 @@
 
     async function loadClientLoanedContainers(clientId) {
         if (!clientId) {
-            document.getElementById('client-loaned-containers-info')?.classList.add('hidden');
+            document.getElementById('client-current-loans-info')?.classList.add('hidden');
             currentSelectedClient = null;
             return;
         }
@@ -9902,8 +10190,8 @@
 
             const totalLoaned = loansSnapshot.docs.reduce((sum, doc) => sum + (doc.data().quantity || 0), 0);
 
-            const infoDiv = document.getElementById('client-loaned-containers-info');
-            const countSpan = document.getElementById('client-loaned-count');
+            const infoDiv = document.getElementById('client-current-loans-info');
+            const countSpan = document.getElementById('client-current-loans-count');
 
             if (totalLoaned > 0) {
                 countSpan.textContent = totalLoaned;
@@ -9997,6 +10285,15 @@
         document.getElementById('sale-quantity').value = 1;
         document.getElementById('returned-containers').value = 0;
         document.getElementById('loan-containers').value = 0;
+
+        // Limpiar campos de préstamo adicional
+        document.getElementById('loan-return-date').value = '';
+        document.getElementById('loan-is-comodato').checked = false;
+        document.getElementById('loan-return-date-section')?.classList.add('hidden');
+        document.getElementById('loan-deposit-display')?.classList.add('hidden');
+        document.getElementById('loan-limit-warning')?.classList.add('hidden');
+        document.getElementById('client-current-loans-info')?.classList.add('hidden');
+
         currentSelectedClient = null;
         updateCashClosureSummary();
         updateSellerDashboard();
@@ -10195,16 +10492,40 @@
 
     async function registerContainerLoan(clientId, quantity, saleId) {
         try {
-            await db_firestore.collection('loaned_containers').add({
+            // Obtener valores de la UI
+            const returnDate = document.getElementById('loan-return-date')?.value || null;
+            const isComodato = document.getElementById('loan-is-comodato')?.checked || false;
+            const depositAmount = containerSettings.depositAmount;
+            const totalDeposit = quantity * depositAmount;
+
+            // Obtener nombre del cliente
+            const clientDoc = await db_firestore.collection('clients').doc(clientId).get();
+            const clientName = clientDoc.exists ? clientDoc.data().name : 'Cliente';
+
+            const loanData = {
                 clientId: clientId,
+                clientName: clientName,
                 sellerId: auth.currentUser.uid,
+                vehicleId: db.cashRegister.vehicleId || null,
                 quantity: quantity,
                 saleId: saleId,
                 loanDate: getCurrentDate(),
+                expectedReturnDate: isComodato ? null : returnDate,
+                isComodato: isComodato,
+                depositAmount: depositAmount,
+                totalDeposit: totalDeposit,
+                transactionType: 'additional_loan', // Para diferenciarlo de otros préstamos
                 status: 'active',
+                returnedDate: null,
+                returnedQuantity: 0,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            console.log(`✅ Registrado préstamo de ${quantity} bidones`);
+            };
+
+            await db_firestore.collection('loaned_containers').add(loanData);
+
+            console.log(`✅ Registrado préstamo de ${quantity} bidones adicionales:`);
+            console.log(`   - Depósito: $${totalDeposit.toFixed(2)}`);
+            console.log(`   - Fecha esperada: ${isComodato ? 'COMODATO' : returnDate}`);
         } catch (error) {
             console.error('Error registrando préstamo de bidones:', error);
         }
@@ -10328,9 +10649,41 @@
                 daysBorrowed = diffDays;
             }
 
-            const statusBadge = status === 'active'
-                ? '<span class="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-semibold rounded">Activo</span>'
-                : '<span class="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs font-semibold rounded">Devuelto</span>';
+            // Determinar badge de estado con indicador de vencimiento
+            let statusBadge;
+            let expectedReturnBadge = '-';
+
+            if (status === 'active') {
+                // Verificar si está vencido
+                if (loan.isComodato) {
+                    expectedReturnBadge = '<span class="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs font-semibold rounded">COMODATO</span>';
+                } else if (loan.expectedReturnDate) {
+                    expectedReturnBadge = loan.expectedReturnDate;
+
+                    // Verificar si está vencido
+                    const today = new Date();
+                    const expectedDate = new Date(loan.expectedReturnDate);
+                    if (expectedDate < today) {
+                        const daysPastDue = Math.ceil((today - expectedDate) / (1000 * 60 * 60 * 24));
+                        statusBadge = `<span class="px-2 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 text-xs font-semibold rounded">VENCIDO (${daysPastDue}d)</span>`;
+                    } else {
+                        statusBadge = '<span class="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-semibold rounded">Activo</span>';
+                    }
+                } else {
+                    statusBadge = '<span class="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-semibold rounded">Activo</span>';
+                }
+
+                // Si no se calculó el status badge todavía
+                if (!statusBadge) {
+                    statusBadge = '<span class="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-semibold rounded">Activo</span>';
+                }
+            } else {
+                statusBadge = '<span class="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs font-semibold rounded">Devuelto</span>';
+            }
+
+            const depositDisplay = loan.totalDeposit
+                ? `<span class="font-semibold text-green-700 dark:text-green-400">$${loan.totalDeposit.toFixed(2)}</span>`
+                : '-';
 
             const row = document.createElement('tr');
             row.className = 'hover:bg-slate-50 dark:hover:bg-slate-700';
@@ -10340,10 +10693,12 @@
             row.innerHTML = `
                 <td class="py-3 px-4 text-sm">${loanDate}</td>
                 <td class="py-3 px-4 text-sm font-semibold">${loan.clientName || 'N/A'}</td>
-                <td class="py-3 px-4 text-sm">
+                <td class="py-3 px-4 text-sm text-center">
                     <span class="px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded font-bold">${loan.quantity || 0}</span>
                 </td>
-                <td class="py-3 px-4 text-sm">${daysBorrowed} ${daysBorrowed !== '-' ? 'día(s)' : ''}</td>
+                <td class="py-3 px-4 text-sm text-center">${depositDisplay}</td>
+                <td class="py-3 px-4 text-sm text-center">${daysBorrowed} ${daysBorrowed !== '-' ? 'día(s)' : ''}</td>
+                <td class="py-3 px-4 text-sm text-center">${expectedReturnBadge}</td>
                 <td class="py-3 px-4 text-sm">${statusBadge}</td>
                 <td class="py-3 px-4 text-sm">${returnDate}</td>
             `;
