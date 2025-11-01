@@ -8775,15 +8775,37 @@
     function updateExpenseTypeDropdown() { const select = document.getElementById('expense-category-selector'); if(!select) return; select.innerHTML = '<option value="">Seleccione tipo</option>'; db.expenseTypes.forEach(et => { select.innerHTML += `<option value="${et.id}">${et.name}</option>`; }); }
     // ===== FUNCIONES DE INVENTARIO DE VEHÍCULO =====
 
+    // Bandera para evitar múltiples llamadas simultáneas
+    let isPopulatingVehicles = false;
+
     async function populateOpeningVehicleDropdown() {
-        const select = document.getElementById('opening-vehicle');
-        if (!select) return;
+        // Evitar llamadas simultáneas
+        if (isPopulatingVehicles) {
+            console.log('⏸️ Ya se está poblando el dropdown, omitiendo...');
+            return;
+        }
 
-        select.innerHTML = '<option value="">Seleccionar vehículo...</option>';
+        isPopulatingVehicles = true;
 
-        console.log('🚛 Poblando dropdown de vehículos para apertura de caja');
-        console.log('Usuario actual:', auth.currentUser?.uid);
-        console.log('Total de vehículos en db.vehicles:', db.vehicles?.length || 0);
+        try {
+            const select = document.getElementById('opening-vehicle');
+            if (!select) {
+                isPopulatingVehicles = false;
+                return;
+            }
+
+            // Limpiar TODAS las opciones primero
+            select.innerHTML = '';
+
+            // Agregar opción por defecto
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Seleccionar vehículo...';
+            select.appendChild(defaultOption);
+
+            console.log('🚛 Poblando dropdown de vehículos para apertura de caja');
+            console.log('Usuario actual:', auth.currentUser?.uid);
+            console.log('Total de vehículos en db.vehicles:', db.vehicles?.length || 0);
 
         // Si db.vehicles ya tiene datos, usarlos
         if (db.vehicles && db.vehicles.length > 0) {
@@ -8802,9 +8824,13 @@
                 });
                 console.log('✅ Dropdown poblado con', myVehicles.length, 'vehículos');
             } else {
-                select.innerHTML = '<option value="">No tiene vehículos asignados</option>';
+                const noVehiclesOption = document.createElement('option');
+                noVehiclesOption.value = '';
+                noVehiclesOption.textContent = 'No tiene vehículos asignados';
+                select.appendChild(noVehiclesOption);
                 console.log('⚠️ No hay vehículos asignados a este vendedor');
             }
+            isPopulatingVehicles = false;
             return;
         }
 
@@ -8835,7 +8861,15 @@
             }
         } catch (error) {
             console.error('❌ Error al cargar vehículos:', error);
-            select.innerHTML = '<option value="">Error al cargar vehículos (¿sin conexión?)</option>';
+            const errorOption = document.createElement('option');
+            errorOption.value = '';
+            errorOption.textContent = 'Error al cargar vehículos (¿sin conexión?)';
+            select.appendChild(errorOption);
+        } finally {
+            isPopulatingVehicles = false;
+        }
+        } finally {
+            isPopulatingVehicles = false;
         }
     }
 
@@ -9942,6 +9976,19 @@
         // GUARDAR REFERENCIA DE LOS ITEMS ANTES DE LIMPIAR
         const soldItems = [...currentSaleItems];  // Clonar array para preservar los datos
 
+        // ✅ ACTUALIZAR INVENTARIO LOCAL INMEDIATAMENTE (antes de Firestore)
+        // Esto garantiza que funcione offline
+        if (db.cashRegister.vehicleInventory && db.cashRegister.vehicleInventory.length > 0) {
+            soldItems.forEach(soldItem => {
+                const invItem = db.cashRegister.vehicleInventory.find(i => i.productId === soldItem.productId);
+                if (invItem) {
+                    invItem.quantity = Math.max(0, invItem.quantity - soldItem.quantity);
+                    console.log(`📦 Inventario local actualizado: ${soldItem.name} - Nueva cantidad: ${invItem.quantity}`);
+                }
+            });
+            saveCashRegisterToStorage(); // Guardar cambios en localStorage
+        }
+
         // Actualizar UI inmediatamente
         currentSaleItems = [];
         renderCurrentSaleTable();
@@ -9965,7 +10012,7 @@
                 db.sales[saleIndex].id = docRef.id;
             }
 
-            // Actualizar inventario del vehículo con los items guardados
+            // Actualizar inventario del vehículo en Firestore (intentará sincronizar)
             if (db.cashRegister.vehicleId && db.cashRegister.sessionId) {
                 await updateVehicleInventoryAfterSale(db.cashRegister.vehicleId, db.cashRegister.sessionId, soldItems, returnedContainers);
             }
