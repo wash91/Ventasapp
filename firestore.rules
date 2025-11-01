@@ -1,0 +1,144 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // --- Funciones Helper ---
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() { return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'; }
+    function isSeller() {
+      return isSignedIn() && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'seller' ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'vendedor'
+      );
+    }
+    function isOwner(userId) { return request.auth.uid == userId; }
+
+    // --- Reglas por Colección ---
+
+    // USERS: Los usuarios pueden leer su propia info. Admins leen todo.
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // PRODUCTS: Todos los autenticados pueden leer la lista. Admins escriben.
+    match /products/{productId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // EXPENSE_TYPES: Todos los autenticados pueden leer la lista. Admins escriben.
+    match /expense_types/{expenseTypeId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // SALES: Vendedores y Admins pueden leer todo. Vendedores solo crean/actualizan sus propias ventas.
+    match /sales/{saleId} {
+      allow read: if isSignedIn();
+      allow create: if (isSignedIn() && isOwner(request.resource.data.sellerId)) || isAdmin();
+      allow update: if isAdmin() || (isSignedIn() && isOwner(resource.data.sellerId));
+      allow delete: if isAdmin();
+
+      // Subcolección de pagos
+      match /payments/{paymentId} {
+        allow read, create: if isSignedIn();
+      }
+    }
+
+    // EXPENSES: Vendedores y Admins pueden leer todo. Vendedores solo crean/actualizan sus propios gastos.
+    match /expenses/{expenseId} {
+      allow read: if isSignedIn();
+      allow create: if (isSignedIn() && isOwner(request.resource.data.sellerId)) || isAdmin();
+      allow update: if isAdmin() || (isSignedIn() && isOwner(resource.data.sellerId));
+      allow delete: if isAdmin();
+    }
+
+    // CLIENTS: Todos pueden leer. Vendedores crean clientes auto-asignados. Solo admins pueden reasignar.
+    match /clients/{clientId} {
+      allow read: if isSignedIn();
+      // Crear: vendedor puede crear si se asigna a sí mismo, admin puede crear con cualquier asignación
+      allow create: if (isSignedIn() && request.resource.data.assignedSeller == request.auth.uid && isOwner(request.resource.data.createdBy)) || isAdmin();
+      // Actualizar: vendedores pueden actualizar info (excepto assignedSeller), admin puede todo
+      allow update: if (isSignedIn() && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['assignedSeller'])) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // COLLECTIONS: Vendedores y Admins pueden leer todo. Vendedores solo crean sus propios ingresos.
+    match /collections/{collectionId} {
+      allow read: if isSignedIn();
+      allow create: if (isSignedIn() && isOwner(request.resource.data.sellerId)) || isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    // CASH_CLOSURES: Vendedores leen sus propios cierres. Admins leen todo.
+    match /cash_closures/{closureId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.sellerId == request.auth.uid);
+      allow create: if (isSignedIn() && isOwner(request.resource.data.sellerId)) || isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    // SALES_GOALS: Vendedores pueden leer las metas. Admins pueden gestionarlas.
+    match /sales_goals/{goalId} {
+      allow read: if isSignedIn(); // Permite leer, la app filtra por vendedor
+      allow write: if isAdmin();
+    }
+
+    // CASH_SESSIONS: Vendedores pueden crear, leer y actualizar sus propias sesiones. Admins pueden leer todo.
+    match /cash_sessions/{sessionId} {
+      allow get: if isAdmin() || (isSignedIn() && resource.data.sellerId == request.auth.uid);
+      allow list: if isSignedIn(); // Permitir queries, la app filtra por sellerId
+      allow create: if (isSignedIn() && isOwner(request.resource.data.sellerId)) || isAdmin();
+      allow update: if isAdmin() || (isSignedIn() && isOwner(resource.data.sellerId));
+    }
+
+    // VISITS: Vendedores pueden crear y leer sus propias visitas. Admins pueden leer todo.
+    match /visits/{visitId} {
+      allow read: if isSignedIn();
+      allow create: if (isSignedIn() && isOwner(request.resource.data.sellerId)) || isAdmin();
+      allow update, delete: if isAdmin() || (isSignedIn() && isOwner(resource.data.sellerId));
+    }
+
+    // WHATSAPP_TEMPLATES: Todos pueden leer. Solo admins pueden crear/editar/eliminar.
+    match /whatsapp_templates/{templateId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // VEHICLES: Todos los autenticados pueden leer. Solo admins pueden crear/editar/eliminar.
+    match /vehicles/{vehicleId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // VEHICLE_INVENTORY: Vendedores pueden ver/editar su propio inventario. Admins ven todo.
+    match /vehicle_inventory/{inventoryId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isSignedIn();
+    }
+
+    // LOANED_CONTAINERS: Seguimiento de bidones prestados a clientes
+    match /loaned_containers/{loanId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    // INVENTORY_LOSSES: Reporte de pérdidas y daños
+    match /inventory_losses/{lossId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isAdmin() || resource.data.sellerId == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+
+    // INVENTORY_TRANSFERS: Transferencias de inventario entre vehículos
+    match /inventory_transfers/{transferId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+  }
+}
