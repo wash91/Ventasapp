@@ -8936,8 +8936,19 @@
             const sessionRef = await db_firestore.collection('cash_sessions').add(sessionData);
 
             // Actualizar inventario del vehículo en Firestore
+            // Primero, eliminar inventario anterior del vehículo para evitar duplicados
+            const oldInventorySnapshot = await db_firestore.collection('vehicle_inventory')
+                .where('vehicleId', '==', vehicleId)
+                .get();
+
             const batch = db_firestore.batch();
 
+            // Eliminar documentos de inventario anteriores
+            oldInventorySnapshot.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+
+            // Crear nuevos documentos de inventario con el sessionId actual
             inventory.forEach(item => {
                 const invRef = db_firestore.collection('vehicle_inventory').doc();
                 batch.set(invRef, {
