@@ -1745,6 +1745,123 @@
                         </div>
                     </div>
 
+                    <!-- MÓDULO DE BIDONES PRESTADOS -->
+                    <div id="seller-loaned-containers" class="hidden">
+                        <div class="space-y-6">
+                            <!-- Encabezado -->
+                            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 rounded-xl shadow-lg text-white">
+                                <h2 class="text-3xl font-bold mb-2 flex items-center gap-3">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                    </svg>
+                                    Bidones Prestados
+                                </h2>
+                                <p class="text-blue-100">Control de bidones retornables prestados a clientes</p>
+                            </div>
+
+                            <!-- Resumen de Bidones Prestados -->
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div class="bg-blue-100 dark:bg-blue-900/30 p-4 rounded-lg">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-sm text-blue-600 dark:text-blue-400 font-semibold">Total Prestados</p>
+                                            <p class="text-2xl font-bold text-blue-900 dark:text-blue-100" id="total-loaned-containers">0</p>
+                                        </div>
+                                        <svg class="w-12 h-12 text-blue-600 dark:text-blue-400 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <div class="bg-green-100 dark:bg-green-900/30 p-4 rounded-lg">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-sm text-green-600 dark:text-green-400 font-semibold">Devueltos Hoy</p>
+                                            <p class="text-2xl font-bold text-green-900 dark:text-green-100" id="returned-today-containers">0</p>
+                                        </div>
+                                        <svg class="w-12 h-12 text-green-600 dark:text-green-400 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <div class="bg-yellow-100 dark:bg-yellow-900/30 p-4 rounded-lg">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-sm text-yellow-600 dark:text-yellow-400 font-semibold">Prestados Hoy</p>
+                                            <p class="text-2xl font-bold text-yellow-900 dark:text-yellow-100" id="loaned-today-containers">0</p>
+                                        </div>
+                                        <svg class="w-12 h-12 text-yellow-600 dark:text-yellow-400 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <div class="bg-purple-100 dark:bg-purple-900/30 p-4 rounded-lg">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-sm text-purple-600 dark:text-purple-400 font-semibold">Clientes con Bidones</p>
+                                            <p class="text-2xl font-bold text-purple-900 dark:text-purple-100" id="clients-with-containers">0</p>
+                                        </div>
+                                        <svg class="w-12 h-12 text-purple-600 dark:text-purple-400 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Filtros -->
+                            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-md">
+                                <div class="flex flex-col sm:flex-row gap-3">
+                                    <div class="flex-1">
+                                        <input type="text" id="loaned-client-search" placeholder="🔍 Buscar por cliente..." class="w-full p-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" onkeyup="filterLoanedContainers()">
+                                    </div>
+                                    <select id="loaned-status-filter" class="p-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" onchange="filterLoanedContainers()">
+                                        <option value="all">Todos</option>
+                                        <option value="active">Activos</option>
+                                        <option value="returned">Devueltos</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Lista de Bidones Prestados Activos -->
+                            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md">
+                                <h3 class="text-2xl font-bold mb-4 text-slate-900 dark:text-white flex items-center gap-2">
+                                    <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                                    </svg>
+                                    Bidones Prestados a Clientes
+                                </h3>
+
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full">
+                                        <thead class="bg-slate-50 dark:bg-slate-700">
+                                            <tr>
+                                                <th class="py-3 px-4 text-left text-xs font-semibold">Fecha Préstamo</th>
+                                                <th class="py-3 px-4 text-left text-xs font-semibold">Cliente</th>
+                                                <th class="py-3 px-4 text-left text-xs font-semibold">Cantidad</th>
+                                                <th class="py-3 px-4 text-left text-xs font-semibold">Días Prestado</th>
+                                                <th class="py-3 px-4 text-left text-xs font-semibold">Estado</th>
+                                                <th class="py-3 px-4 text-left text-xs font-semibold">Fecha Devolución</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="loaned-containers-list" class="divide-y divide-slate-200 dark:divide-slate-700">
+                                            <!-- Se llenará dinámicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div id="loaned-containers-empty" class="hidden text-center py-8 text-slate-500 dark:text-slate-400">
+                                    <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                    </svg>
+                                    <p class="text-lg font-semibold">No hay bidones prestados</p>
+                                    <p class="text-sm mt-2">Los bidones se prestan automáticamente al realizar ventas</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div id="seller-credit-accounts" class="hidden">
                         <!-- Resumen de Cuentas por Cobrar -->
                         <div class="bg-gradient-to-r from-orange-600 to-red-700 p-4 sm:p-6 rounded-xl shadow-lg text-white mb-6">
@@ -4957,6 +5074,7 @@
                     if(targetId === 'seller-goals') loadGoalsModule();
                     if(targetId === 'seller-visits') loadVisitsModule();
                     if(targetId === 'seller-inventory') loadSellerInventoryModule();
+                    if(targetId === 'seller-loaned-containers') loadLoanedContainersModule();
                     if(targetId === 'seller-losses') {
                         populateLossProductDropdown();
                         loadSellerLosses();
@@ -8936,17 +9054,25 @@
             const sessionRef = await db_firestore.collection('cash_sessions').add(sessionData);
 
             // Actualizar inventario del vehículo en Firestore
-            // Primero, eliminar inventario anterior del vehículo para evitar duplicados
-            const oldInventorySnapshot = await db_firestore.collection('vehicle_inventory')
-                .where('vehicleId', '==', vehicleId)
-                .get();
-
             const batch = db_firestore.batch();
 
-            // Eliminar documentos de inventario anteriores
-            oldInventorySnapshot.forEach(doc => {
-                batch.delete(doc.ref);
-            });
+            // Intentar eliminar inventario anterior del vehículo para evitar duplicados
+            // Esto funciona tanto online como offline gracias a Firestore persistence
+            try {
+                const oldInventorySnapshot = await db_firestore.collection('vehicle_inventory')
+                    .where('vehicleId', '==', vehicleId)
+                    .get();
+
+                // Eliminar documentos de inventario anteriores
+                oldInventorySnapshot.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+
+                console.log(`🗑️ Eliminando ${oldInventorySnapshot.size} documentos de inventario anterior`);
+            } catch (deleteError) {
+                // Si falla la eliminación (ej: primer uso offline), continuar sin eliminar
+                console.warn('No se pudo eliminar inventario anterior, continuando...', deleteError);
+            }
 
             // Crear nuevos documentos de inventario con el sessionId actual
             inventory.forEach(item => {
@@ -10079,6 +10205,127 @@
             console.error('Error procesando devolución de bidones:', error);
         }
     }
+
+    // ===== MÓDULO DE BIDONES PRESTADOS =====
+    async function loadLoanedContainersModule() {
+        try {
+            // Obtener todos los préstamos del vendedor
+            const loansSnapshot = await db_firestore.collection('loaned_containers')
+                .where('sellerId', '==', auth.currentUser.uid)
+                .orderBy('timestamp', 'desc')
+                .get();
+
+            const loans = [];
+            loansSnapshot.forEach(doc => {
+                loans.push({ id: doc.id, ...doc.data() });
+            });
+
+            // Calcular estadísticas
+            const today = getCurrentDate();
+            const activeLoans = loans.filter(l => l.status === 'active');
+            const loanedToday = loans.filter(l => l.loanDate === today && l.status === 'active');
+            const returnedToday = loans.filter(l => l.returnDate === today && l.status === 'returned');
+
+            // Contar clientes únicos con bidones activos
+            const uniqueClients = new Set(activeLoans.map(l => l.clientId));
+
+            // Total de bidones prestados activos
+            const totalActive = activeLoans.reduce((sum, l) => sum + (l.quantity || 0), 0);
+            const totalLoanedToday = loanedToday.reduce((sum, l) => sum + (l.quantity || 0), 0);
+            const totalReturnedToday = returnedToday.reduce((sum, l) => sum + (l.quantity || 0), 0);
+
+            // Actualizar estadísticas
+            document.getElementById('total-loaned-containers').textContent = totalActive;
+            document.getElementById('returned-today-containers').textContent = totalReturnedToday;
+            document.getElementById('loaned-today-containers').textContent = totalLoanedToday;
+            document.getElementById('clients-with-containers').textContent = uniqueClients.size;
+
+            // Renderizar lista
+            renderLoanedContainersList(loans);
+        } catch (error) {
+            console.error('Error cargando módulo de bidones prestados:', error);
+        }
+    }
+
+    function renderLoanedContainersList(loans) {
+        const tbody = document.getElementById('loaned-containers-list');
+        const emptyDiv = document.getElementById('loaned-containers-empty');
+
+        if (!loans || loans.length === 0) {
+            tbody.innerHTML = '';
+            emptyDiv.classList.remove('hidden');
+            return;
+        }
+
+        emptyDiv.classList.add('hidden');
+        tbody.innerHTML = '';
+
+        loans.forEach(loan => {
+            const loanDate = loan.loanDate || '-';
+            const returnDate = loan.returnDate || '-';
+            const status = loan.status || 'active';
+
+            // Calcular días prestado
+            let daysBorrowed = '-';
+            if (status === 'active' && loan.loanDate) {
+                const today = new Date();
+                const loanDateObj = new Date(loan.loanDate);
+                const diffTime = Math.abs(today - loanDateObj);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                daysBorrowed = diffDays;
+            } else if (status === 'returned' && loan.loanDate && loan.returnDate) {
+                const loanDateObj = new Date(loan.loanDate);
+                const returnDateObj = new Date(loan.returnDate);
+                const diffTime = Math.abs(returnDateObj - loanDateObj);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                daysBorrowed = diffDays;
+            }
+
+            const statusBadge = status === 'active'
+                ? '<span class="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-semibold rounded">Activo</span>'
+                : '<span class="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs font-semibold rounded">Devuelto</span>';
+
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-slate-50 dark:hover:bg-slate-700';
+            row.dataset.clientName = (loan.clientName || '').toLowerCase();
+            row.dataset.status = status;
+
+            row.innerHTML = `
+                <td class="py-3 px-4 text-sm">${loanDate}</td>
+                <td class="py-3 px-4 text-sm font-semibold">${loan.clientName || 'N/A'}</td>
+                <td class="py-3 px-4 text-sm">
+                    <span class="px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded font-bold">${loan.quantity || 0}</span>
+                </td>
+                <td class="py-3 px-4 text-sm">${daysBorrowed} ${daysBorrowed !== '-' ? 'día(s)' : ''}</td>
+                <td class="py-3 px-4 text-sm">${statusBadge}</td>
+                <td class="py-3 px-4 text-sm">${returnDate}</td>
+            `;
+
+            tbody.appendChild(row);
+        });
+    }
+
+    function filterLoanedContainers() {
+        const searchTerm = document.getElementById('loaned-client-search').value.toLowerCase();
+        const statusFilter = document.getElementById('loaned-status-filter').value;
+
+        const rows = document.querySelectorAll('#loaned-containers-list tr');
+
+        rows.forEach(row => {
+            const clientName = row.dataset.clientName || '';
+            const status = row.dataset.status || '';
+
+            const matchesSearch = clientName.includes(searchTerm);
+            const matchesStatus = statusFilter === 'all' || status === statusFilter;
+
+            if (matchesSearch && matchesStatus) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
     async function finalizeCollection(e) {
         e.preventDefault();
         if (!db.cashRegister.isOpen) {
