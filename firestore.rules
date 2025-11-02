@@ -140,5 +140,11 @@ service cloud.firestore {
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }
+
+    // SETTINGS: Configuración general del sistema
+    match /settings/{settingId} {
+      allow read: if isSignedIn();  // Todos pueden leer configuración
+      allow write: if isAdmin();     // Solo admins pueden modificar
+    }
   }
 }
