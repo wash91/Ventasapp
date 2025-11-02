@@ -1435,10 +1435,41 @@
                                             <label class="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400">¿Cliente devuelve bidones vacíos?</label>
                                             <div class="flex items-center gap-3">
                                                 <button type="button" onclick="changeReturnedContainers(-1)" class="bg-red-500 text-white w-10 h-10 rounded-lg hover:bg-red-600 active:scale-95 transition font-bold text-xl">-</button>
-                                                <input type="number" id="returned-containers" value="0" min="0" class="w-20 p-3 text-center text-lg font-bold border-2 rounded-lg dark:bg-slate-700 dark:border-slate-600">
+                                                <input type="number" id="returned-containers" value="0" min="0" onchange="checkUnreturnedContainers()" oninput="checkUnreturnedContainers()" class="w-20 p-3 text-center text-lg font-bold border-2 rounded-lg dark:bg-slate-700 dark:border-slate-600">
                                                 <button type="button" onclick="changeReturnedContainers(1)" class="bg-green-500 text-white w-10 h-10 rounded-lg hover:bg-green-600 active:scale-95 transition font-bold text-xl">+</button>
                                                 <span class="text-xs text-slate-500 dark:text-slate-400">bidones vacíos</span>
                                             </div>
+                                        </div>
+
+                                        <!-- Registro de bidones sin devolver (aparece automáticamente) -->
+                                        <div id="unreturned-containers-section" class="hidden mb-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border-2 border-orange-300 dark:border-orange-700">
+                                            <div class="flex items-center gap-2 mb-3">
+                                                <svg class="w-5 h-5 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                                </svg>
+                                                <h4 class="font-bold text-orange-900 dark:text-orange-100">Bidones Sin Devolver</h4>
+                                            </div>
+                                            <p class="text-xs text-orange-800 dark:text-orange-200 mb-3">
+                                                El cliente está comprando <span id="unreturned-count" class="font-bold">0</span> bidón(es) sin devolver envases vacíos. Registra cuándo debe devolverlos:
+                                            </p>
+
+                                            <!-- Fecha de devolución -->
+                                            <div class="space-y-2 mb-3">
+                                                <label class="text-sm font-medium text-orange-900 dark:text-orange-100">Fecha de devolución esperada:</label>
+                                                <input type="date" id="unreturned-return-date" class="w-full p-2 border-2 border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500 dark:bg-slate-700 dark:border-orange-600">
+                                                <p class="text-xs text-orange-700 dark:text-orange-300">💡 Sugerencia: 7 días desde hoy</p>
+                                            </div>
+
+                                            <!-- Checkbox de comodato -->
+                                            <div class="flex items-center gap-2">
+                                                <input type="checkbox" id="unreturned-is-comodato" onchange="toggleUnreturnedComodato()" class="w-5 h-5 text-orange-600 border-orange-300 rounded focus:ring-orange-500">
+                                                <label for="unreturned-is-comodato" class="text-sm font-medium text-orange-900 dark:text-orange-100 cursor-pointer">
+                                                    Es comodato (préstamo indefinido)
+                                                </label>
+                                            </div>
+                                            <p class="text-xs text-orange-700 dark:text-orange-300 mt-1 ml-7">
+                                                Si es comodato, no se requiere fecha de devolución
+                                            </p>
                                         </div>
 
                                         <!-- Préstamo de bidones llenos (opcional) -->
@@ -9668,6 +9699,9 @@
                 </div>`;
         });
         totalEl.textContent = `$${total.toFixed(2)}`;
+
+        // Verificar automáticamente si hay bidones sin devolver
+        checkUnreturnedContainers();
     }
 
     function clearSaleCart() {
@@ -9824,6 +9858,65 @@
             const currentQty = parseInt(input.value) || 0;
             const newQty = Math.max(0, currentQty + delta);
             input.value = newQty;
+            checkUnreturnedContainers(); // Verificar después de cambiar
+        }
+    }
+
+    // Nueva función: Detectar bidones sin devolver automáticamente
+    function checkUnreturnedContainers() {
+        const returnedQty = parseInt(document.getElementById('returned-containers')?.value) || 0;
+
+        // Contar cuántos bidones de recarga hay en el carrito
+        let refillCount = 0;
+        currentSaleItems.forEach(item => {
+            const productName = item.name.toUpperCase();
+            // Detectar si es una recarga (BCL, BSL, etc.)
+            if (productName.includes('RECARGA') || productName.includes('BCL') || productName.includes('BSL')) {
+                refillCount += item.quantity;
+            }
+        });
+
+        // Si hay recargas pero NO devuelve suficientes bidones
+        const unreturnedCount = Math.max(0, refillCount - returnedQty);
+
+        const section = document.getElementById('unreturned-containers-section');
+        const countSpan = document.getElementById('unreturned-count');
+
+        if (unreturnedCount > 0) {
+            // Mostrar sección
+            section?.classList.remove('hidden');
+            if (countSpan) countSpan.textContent = unreturnedCount;
+
+            // Sugerir fecha (7 días desde hoy)
+            const suggestedDate = new Date();
+            suggestedDate.setDate(suggestedDate.getDate() + 7);
+            const dateInput = document.getElementById('unreturned-return-date');
+            if (dateInput && !dateInput.value) {
+                dateInput.value = suggestedDate.toISOString().split('T')[0];
+            }
+        } else {
+            // Ocultar sección si no hay bidones sin devolver
+            section?.classList.add('hidden');
+        }
+    }
+
+    // Nueva función: Manejar checkbox de comodato
+    function toggleUnreturnedComodato() {
+        const checkbox = document.getElementById('unreturned-is-comodato');
+        const dateInput = document.getElementById('unreturned-return-date');
+
+        if (checkbox?.checked) {
+            // Si es comodato, deshabilitar fecha
+            if (dateInput) {
+                dateInput.disabled = true;
+                dateInput.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        } else {
+            // Si no es comodato, habilitar fecha
+            if (dateInput) {
+                dateInput.disabled = false;
+                dateInput.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
         }
     }
 
@@ -9949,6 +10042,19 @@
             }
         }
 
+        // NUEVA VALIDACIÓN: Verificar registro de bidones sin devolver
+        const unreturnedSection = document.getElementById('unreturned-containers-section');
+        if (unreturnedSection && !unreturnedSection.classList.contains('hidden')) {
+            // La sección está visible, significa que hay bidones sin devolver
+            const unreturnedDate = document.getElementById('unreturned-return-date')?.value;
+            const isComodato = document.getElementById('unreturned-is-comodato')?.checked;
+
+            if (!isComodato && !unreturnedDate) {
+                alert('❌ El cliente no está devolviendo bidones vacíos.\n\nDebe registrar la fecha de devolución esperada o marcar "Es comodato" antes de finalizar la venta.');
+                return;
+            }
+        }
+
         const total = currentSaleItems.reduce((sum, item) => sum + item.total, 0);
 
         const saleDoc = {
@@ -9997,6 +10103,15 @@
         document.getElementById('sale-quantity').value = 1;
         document.getElementById('returned-containers').value = 0;
         document.getElementById('loan-containers').value = 0;
+
+        // Limpiar sección de bidones sin devolver
+        const unreturnedSection = document.getElementById('unreturned-containers-section');
+        if (unreturnedSection) {
+            unreturnedSection.classList.add('hidden');
+            document.getElementById('unreturned-return-date').value = '';
+            document.getElementById('unreturned-is-comodato').checked = false;
+        }
+
         currentSelectedClient = null;
         updateCashClosureSummary();
         updateSellerDashboard();
@@ -10017,9 +10132,20 @@
                 await updateVehicleInventoryAfterSale(db.cashRegister.vehicleId, db.cashRegister.sessionId, soldItems, returnedContainers);
             }
 
-            // Registrar préstamo de bidones si aplica
+            // Registrar préstamo de bidones adicionales si aplica
             if (loanedContainers > 0 && currentSelectedClient) {
                 await registerContainerLoan(currentSelectedClient, loanedContainers, docRef.id);
+            }
+
+            // NUEVO: Registrar bidones sin devolver (recargas sin devolución)
+            if (unreturnedSection && !unreturnedSection.classList.contains('hidden') && currentSelectedClient) {
+                const unreturnedCount = parseInt(document.getElementById('unreturned-count')?.textContent) || 0;
+                if (unreturnedCount > 0) {
+                    const unreturnedDate = document.getElementById('unreturned-return-date')?.value;
+                    const isComodato = document.getElementById('unreturned-is-comodato')?.checked;
+
+                    await registerUnreturnedContainers(currentSelectedClient, unreturnedCount, docRef.id, unreturnedDate, isComodato);
+                }
             }
 
             // Actualizar devolución de bidones prestados
@@ -10207,6 +10333,36 @@
             console.log(`✅ Registrado préstamo de ${quantity} bidones`);
         } catch (error) {
             console.error('Error registrando préstamo de bidones:', error);
+        }
+    }
+
+    // NUEVA FUNCIÓN: Registrar bidones sin devolver en una venta
+    async function registerUnreturnedContainers(clientId, quantity, saleId, expectedReturnDate, isComodato) {
+        try {
+            // Obtener nombre del cliente
+            const clientDoc = await db_firestore.collection('clients').doc(clientId).get();
+            const clientName = clientDoc.exists ? clientDoc.data().name : 'Desconocido';
+
+            const loanData = {
+                clientId: clientId,
+                clientName: clientName,
+                sellerId: auth.currentUser.uid,
+                vehicleId: db.cashRegister.vehicleId || null,
+                quantity: quantity,
+                saleId: saleId,
+                loanDate: getCurrentDate(),
+                expectedReturnDate: isComodato ? null : expectedReturnDate,
+                isComodato: isComodato || false,
+                transactionType: 'unreturned_refill', // Tipo específico para diferenciar
+                status: 'active',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            await db_firestore.collection('loaned_containers').add(loanData);
+
+            console.log(`✅ Registrado ${quantity} bidones sin devolver${isComodato ? ' (COMODATO)' : ' con fecha: ' + expectedReturnDate}`);
+        } catch (error) {
+            console.error('Error registrando bidones sin devolver:', error);
         }
     }
 
