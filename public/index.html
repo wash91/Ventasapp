@@ -10079,8 +10079,15 @@
         const localSale = { id: tempId, ...saleDoc, timestamp: new Date() };
         db.sales.push(localSale);
 
-        // GUARDAR REFERENCIA DE LOS ITEMS ANTES DE LIMPIAR
+        // GUARDAR REFERENCIAS ANTES DE LIMPIAR UI
         const soldItems = [...currentSaleItems];  // Clonar array para preservar los datos
+        const savedClientId = currentSelectedClient; // Guardar cliente antes de limpiar
+
+        // Capturar información de bidones sin devolver ANTES de limpiar UI
+        const hasUnreturnedContainers = unreturnedSection && !unreturnedSection.classList.contains('hidden');
+        const unreturnedCount = hasUnreturnedContainers ? parseInt(document.getElementById('unreturned-count')?.textContent) || 0 : 0;
+        const unreturnedDate = hasUnreturnedContainers ? document.getElementById('unreturned-return-date')?.value : null;
+        const isComodato = hasUnreturnedContainers ? document.getElementById('unreturned-is-comodato')?.checked : false;
 
         // ✅ ACTUALIZAR INVENTARIO LOCAL INMEDIATAMENTE (antes de Firestore)
         // Esto garantiza que funcione offline
@@ -10104,8 +10111,7 @@
         document.getElementById('returned-containers').value = 0;
         document.getElementById('loan-containers').value = 0;
 
-        // Limpiar sección de bidones sin devolver
-        const unreturnedSection = document.getElementById('unreturned-containers-section');
+        // Limpiar sección de bidones sin devolver (reutilizar variable)
         if (unreturnedSection) {
             unreturnedSection.classList.add('hidden');
             document.getElementById('unreturned-return-date').value = '';
@@ -10133,24 +10139,19 @@
             }
 
             // Registrar préstamo de bidones adicionales si aplica
-            if (loanedContainers > 0 && currentSelectedClient) {
-                await registerContainerLoan(currentSelectedClient, loanedContainers, docRef.id);
+            if (loanedContainers > 0 && savedClientId) {
+                await registerContainerLoan(savedClientId, loanedContainers, docRef.id);
             }
 
             // NUEVO: Registrar bidones sin devolver (recargas sin devolución)
-            if (unreturnedSection && !unreturnedSection.classList.contains('hidden') && currentSelectedClient) {
-                const unreturnedCount = parseInt(document.getElementById('unreturned-count')?.textContent) || 0;
-                if (unreturnedCount > 0) {
-                    const unreturnedDate = document.getElementById('unreturned-return-date')?.value;
-                    const isComodato = document.getElementById('unreturned-is-comodato')?.checked;
-
-                    await registerUnreturnedContainers(currentSelectedClient, unreturnedCount, docRef.id, unreturnedDate, isComodato);
-                }
+            // Usar variables capturadas antes de limpiar UI
+            if (hasUnreturnedContainers && unreturnedCount > 0 && savedClientId) {
+                await registerUnreturnedContainers(savedClientId, unreturnedCount, docRef.id, unreturnedDate, isComodato);
             }
 
             // Actualizar devolución de bidones prestados
-            if (returnedContainers > 0 && currentSelectedClient) {
-                await processReturnedContainers(currentSelectedClient, returnedContainers, docRef.id);
+            if (returnedContainers > 0 && savedClientId) {
+                await processReturnedContainers(savedClientId, returnedContainers, docRef.id);
             }
 
             if (navigator.onLine) {
