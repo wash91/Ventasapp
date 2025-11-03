@@ -10326,19 +10326,30 @@
             const isComodato = comodatoCheckbox?.checked || false;
             const expectedReturnDate = isComodato ? null : (dateInput?.value || null);
 
+            // Obtener nombre del cliente
+            const clientDoc = await db_firestore.collection('clients').doc(clientId).get();
+            const clientName = clientDoc.exists ? clientDoc.data().name : 'Cliente';
+
             // Crear registro único con ID personalizado
             const uniqueId = `missing-return-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
             const missingReturnDoc = {
                 clientId: clientId,
+                clientName: clientName,
+                sellerId: auth.currentUser.uid,
+                vehicleId: db.cashRegister.vehicleId || null,
                 quantity: quantity,
+                saleId: saleId,
+                loanDate: getCurrentDate(),
                 expectedReturnDate: expectedReturnDate,
                 isComodato: isComodato,
+                depositAmount: 0,
+                totalDeposit: 0,
                 transactionType: 'missing_return',
-                saleId: saleId,
                 status: 'active',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                createdBy: auth.currentUser?.uid || null
+                returnedDate: null,
+                returnedQuantity: 0,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
 
             // Guardar en Firestore
@@ -10348,7 +10359,8 @@
                 quantity,
                 expectedReturnDate,
                 isComodato,
-                clientId
+                clientId,
+                clientName
             });
         } catch (error) {
             console.error('❌ Error al registrar bidones sin devolver:', error);
