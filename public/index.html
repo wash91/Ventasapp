@@ -347,8 +347,8 @@
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Monto de Depósito -->
-                            <div class="bg-blue-50 dark:bg-blue-900/20 p-5 rounded-xl border-2 border-blue-200 dark:border-blue-800">
+                            <!-- Monto de Depósito (OCULTO - NO SE USA) -->
+                            <div class="hidden bg-blue-50 dark:bg-blue-900/20 p-5 rounded-xl border-2 border-blue-200 dark:border-blue-800">
                                 <label class="block text-sm font-bold mb-3 text-blue-900 dark:text-blue-300 flex items-center gap-2">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -361,7 +361,7 @@
                                            id="container-deposit-amount"
                                            min="0"
                                            step="0.50"
-                                           value="5.00"
+                                           value="0.00"
                                            class="flex-1 p-3 text-lg font-bold border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:border-blue-600 dark:text-white">
                                 </div>
                                 <p class="text-xs text-blue-700 dark:text-blue-400 mt-2">
@@ -2008,7 +2008,7 @@
                                                 <th class="py-3 px-4 text-left text-xs font-semibold">Fecha Préstamo</th>
                                                 <th class="py-3 px-4 text-left text-xs font-semibold">Cliente</th>
                                                 <th class="py-3 px-4 text-left text-xs font-semibold">Cantidad</th>
-                                                <th class="py-3 px-4 text-left text-xs font-semibold">Depósito</th>
+                                                <th class="hidden py-3 px-4 text-left text-xs font-semibold">Depósito</th>
                                                 <th class="py-3 px-4 text-left text-xs font-semibold">Días Prestado</th>
                                                 <th class="py-3 px-4 text-left text-xs font-semibold">Fecha Esperada</th>
                                                 <th class="py-3 px-4 text-left text-xs font-semibold">Estado</th>
@@ -5998,12 +5998,13 @@
 
     async function saveContainerSettings() {
         try {
-            const depositAmount = parseFloat(document.getElementById('container-deposit-amount')?.value) || 5.00;
-            const maxAdditional = parseInt(document.getElementById('container-max-additional')?.value) || 5;
+            // NO MANEJAR DEPÓSITO - siempre 0
+            const depositAmount = 0;
+            const maxAdditional = parseInt(document.getElementById('container-max-additional')?.value);
 
-            // Validar valores
-            if (depositAmount < 0 || maxAdditional < 1 || maxAdditional > 20) {
-                alert('❌ Valores inválidos. Por favor verifica:\n- Depósito debe ser mayor a 0\n- Límite debe estar entre 1 y 20');
+            // Validar solo maxAdditional si existe
+            if (isNaN(maxAdditional) || maxAdditional < 1 || maxAdditional > 20) {
+                alert('❌ Valores inválidos. Límite debe estar entre 1 y 20');
                 return;
             }
 
@@ -6018,13 +6019,13 @@
             await db_firestore.collection('settings').doc('container_config').set(configData, { merge: true });
 
             // Actualizar variable global
-            containerSettings.depositAmount = depositAmount;
+            containerSettings.depositAmount = 0;
             containerSettings.maxAdditional = maxAdditional;
 
             // Actualizar UI
             const statusText = document.getElementById('settings-status-text');
             if (statusText) {
-                statusText.textContent = `✅ Configuración guardada: Depósito $${depositAmount.toFixed(2)}, Máximo ${maxAdditional} bidones`;
+                statusText.textContent = `✅ Configuración guardada: Máximo ${maxAdditional} bidones (Sin depósito)`;
                 statusText.parentElement.classList.remove('bg-slate-100', 'dark:bg-slate-700');
                 statusText.parentElement.classList.add('bg-green-100', 'dark:bg-green-900/30');
 
@@ -6048,12 +6049,12 @@
 
             if (settingsDoc.exists) {
                 const data = settingsDoc.data();
-                document.getElementById('container-deposit-amount').value = data.depositAmount || 5.00;
+                // NO USAR DEPÓSITO
                 document.getElementById('container-max-additional').value = data.maxAdditional || 5;
 
                 const statusText = document.getElementById('settings-status-text');
                 if (statusText) {
-                    statusText.textContent = `Depósito: $${(data.depositAmount || 5.00).toFixed(2)}, Máximo: ${data.maxAdditional || 5} bidones`;
+                    statusText.textContent = `Máximo: ${data.maxAdditional || 5} bidones (Sin depósito)`;
                 }
             } else {
                 // Crear configuración por defecto
@@ -10089,7 +10090,8 @@
             const settingsDoc = await db_firestore.collection('settings').doc('container_config').get();
             if (settingsDoc.exists) {
                 const data = settingsDoc.data();
-                containerSettings.depositAmount = data.depositAmount || 5.00;
+                // NO USAR DEPÓSITO - siempre 0
+                containerSettings.depositAmount = 0;
                 containerSettings.maxAdditional = data.maxAdditional || 5;
 
                 // Actualizar UI
@@ -10137,17 +10139,11 @@
         const loanQty = parseInt(document.getElementById('loan-containers')?.value) || 0;
         const depositDisplay = document.getElementById('loan-deposit-display');
         const dateSection = document.getElementById('loan-return-date-section');
-        const depositTotal = document.getElementById('loan-deposit-total');
-        const depositUnit = document.getElementById('loan-deposit-unit');
-        const qtyDisplay = document.getElementById('loan-qty-display');
+
+        // NO MOSTRAR DEPÓSITO - siempre oculto
+        depositDisplay?.classList.add('hidden');
 
         if (loanQty > 0) {
-            const totalDeposit = loanQty * containerSettings.depositAmount;
-            depositTotal.textContent = totalDeposit.toFixed(2);
-            depositUnit.textContent = `$${containerSettings.depositAmount.toFixed(2)}`;
-            qtyDisplay.textContent = loanQty;
-
-            depositDisplay?.classList.remove('hidden');
             dateSection?.classList.remove('hidden');
 
             // Sugerir fecha por defecto si no hay una
@@ -10158,7 +10154,6 @@
                 dateInput.value = suggestedDate.toISOString().split('T')[0];
             }
         } else {
-            depositDisplay?.classList.add('hidden');
             dateSection?.classList.add('hidden');
         }
     }
@@ -10901,7 +10896,7 @@
                 <td class="py-3 px-4 text-sm text-center">
                     <span class="px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded font-bold">${loan.quantity || 0}</span>
                 </td>
-                <td class="py-3 px-4 text-sm text-center">${depositDisplay}</td>
+                <td class="hidden py-3 px-4 text-sm text-center">${depositDisplay}</td>
                 <td class="py-3 px-4 text-sm text-center">${daysBorrowed} ${daysBorrowed !== '-' ? 'día(s)' : ''}</td>
                 <td class="py-3 px-4 text-sm text-center">${expectedReturnBadge}</td>
                 <td class="py-3 px-4 text-sm">${statusBadge}</td>
