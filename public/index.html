@@ -10554,7 +10554,7 @@
 
             const batch = db_firestore.batch();
 
-            // Actualizar cantidades vendidas
+            // Actualizar cantidades vendidas (descontar productos llenos vendidos)
             items.forEach(item => {
                 const invDoc = inventorySnapshot.docs.find(doc => doc.data().productId === item.productId);
                 if (invDoc) {
@@ -10564,70 +10564,57 @@
                         quantity: Math.max(0, newQty),
                         lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                     });
-                }
-
-                // ===== AGREGAR BIDÓN VACÍO AUTOMÁTICAMENTE =====
-                // Si se vende RECARGA BCL o RECARGA BSL, agregar bidón vacío correspondiente
-                const product = db.products.find(p => p.id === item.productId);
-                if (product) {
-                    const productName = product.name.toUpperCase();
-                    let emptyProductName = null;
-
-                    if (productName.includes('RECARGA BCL')) {
-                        emptyProductName = 'BCL VACIO';
-                    } else if (productName.includes('RECARGA BSL')) {
-                        emptyProductName = 'BSL VACIO';
-                    }
-
-                    if (emptyProductName) {
-                        const emptyProduct = db.products.find(p => p.name.toUpperCase().includes(emptyProductName));
-                        if (emptyProduct) {
-                            const emptyInvDoc = inventorySnapshot.docs.find(doc => doc.data().productId === emptyProduct.id);
-                            if (emptyInvDoc) {
-                                // Ya existe, incrementar cantidad
-                                const currentEmptyQty = emptyInvDoc.data().quantity;
-                                batch.update(emptyInvDoc.ref, {
-                                    quantity: currentEmptyQty + item.quantity,
-                                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                                });
-                            } else {
-                                // No existe, crear nuevo registro
-                                const newInvRef = db_firestore.collection('vehicle_inventory').doc();
-                                batch.set(newInvRef, {
-                                    vehicleId: vehicleId,
-                                    productId: emptyProduct.id,
-                                    quantity: item.quantity,
-                                    sessionId: sessionId,
-                                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                                });
-                            }
-                            console.log(`✅ ${item.quantity}x ${emptyProductName} agregados al inventario por venta de ${product.name}`);
-                        }
-                    }
+                    console.log(`📦 Descontado: ${item.quantity}x producto (Inventario: ${currentQty} → ${Math.max(0, newQty)})`);
                 }
             });
 
             // Si devolvieron bidones vacíos, incrementar inventario de bidones vacíos
+            // Se suman a los tipos de bidones vacíos correspondientes a las recargas vendidas
             if (returnedEmpty > 0) {
-                const emptyProduct = db.products.find(p => p.category === 'bidon_vacio');
-                if (emptyProduct) {
-                    const emptyInvDoc = inventorySnapshot.docs.find(doc => doc.data().productId === emptyProduct.id);
-                    if (emptyInvDoc) {
-                        const currentQty = emptyInvDoc.data().quantity;
-                        batch.update(emptyInvDoc.ref, {
-                            quantity: currentQty + returnedEmpty,
-                            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                    } else {
-                        // Crear nuevo registro de bidones vacíos
-                        const newInvRef = db_firestore.collection('vehicle_inventory').doc();
-                        batch.set(newInvRef, {
-                            vehicleId: vehicleId,
-                            productId: emptyProduct.id,
-                            quantity: returnedEmpty,
-                            sessionId: sessionId,
-                            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                        });
+                // Identificar qué tipos de recargas se vendieron
+                const bclSold = items.some(item => {
+                    const product = db.products.find(p => p.id === item.productId);
+                    return product && product.name.toUpperCase().includes('RECARGA BCL');
+                });
+                const bslSold = items.some(item => {
+                    const product = db.products.find(p => p.id === item.productId);
+                    return product && product.name.toUpperCase().includes('RECARGA BSL');
+                });
+
+                // Determinar a qué bidón vacío sumar
+                let emptyProductName = null;
+                if (bclSold && !bslSold) {
+                    emptyProductName = 'BCL VACIO';
+                } else if (bslSold && !bclSold) {
+                    emptyProductName = 'BSL VACIO';
+                } else if (bclSold && bslSold) {
+                    // Si vendió ambos, sumar a BCL VACIO por defecto
+                    emptyProductName = 'BCL VACIO';
+                }
+
+                if (emptyProductName) {
+                    const emptyProduct = db.products.find(p => p.name.toUpperCase().includes(emptyProductName));
+                    if (emptyProduct) {
+                        const emptyInvDoc = inventorySnapshot.docs.find(doc => doc.data().productId === emptyProduct.id);
+                        if (emptyInvDoc) {
+                            const currentQty = emptyInvDoc.data().quantity;
+                            batch.update(emptyInvDoc.ref, {
+                                quantity: currentQty + returnedEmpty,
+                                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            console.log(`✅ +${returnedEmpty}x ${emptyProductName} devueltos por cliente`);
+                        } else {
+                            // Crear nuevo registro de bidones vacíos
+                            const newInvRef = db_firestore.collection('vehicle_inventory').doc();
+                            batch.set(newInvRef, {
+                                vehicleId: vehicleId,
+                                productId: emptyProduct.id,
+                                quantity: returnedEmpty,
+                                sessionId: sessionId,
+                                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            console.log(`✅ Creado inventario: +${returnedEmpty}x ${emptyProductName} devueltos por cliente`);
+                        }
                     }
                 }
             }
@@ -10637,54 +10624,51 @@
             // Actualizar inventario en memoria (db.cashRegister.vehicleInventory)
             if (db.cashRegister.vehicleInventory) {
                 items.forEach(item => {
-                    // Reducir inventario del producto vendido
+                    // Reducir inventario del producto vendido (descontar productos llenos)
                     const invItem = db.cashRegister.vehicleInventory.find(i => i.productId === item.productId);
                     if (invItem) {
                         invItem.quantity = Math.max(0, invItem.quantity - item.quantity);
-                    }
-
-                    // ===== AGREGAR BIDÓN VACÍO AUTOMÁTICAMENTE EN MEMORIA =====
-                    const product = db.products.find(p => p.id === item.productId);
-                    if (product) {
-                        const productName = product.name.toUpperCase();
-                        let emptyProductName = null;
-
-                        if (productName.includes('RECARGA BCL')) {
-                            emptyProductName = 'BCL VACIO';
-                        } else if (productName.includes('RECARGA BSL')) {
-                            emptyProductName = 'BSL VACIO';
-                        }
-
-                        if (emptyProductName) {
-                            const emptyProduct = db.products.find(p => p.name.toUpperCase().includes(emptyProductName));
-                            if (emptyProduct) {
-                                const emptyInv = db.cashRegister.vehicleInventory.find(i => i.productId === emptyProduct.id);
-                                if (emptyInv) {
-                                    emptyInv.quantity += item.quantity;
-                                } else {
-                                    db.cashRegister.vehicleInventory.push({
-                                        productId: emptyProduct.id,
-                                        quantity: item.quantity
-                                    });
-                                }
-                                console.log(`✅ Inventario en memoria: +${item.quantity} ${emptyProductName}`);
-                            }
-                        }
+                        console.log(`📦 Inventario en memoria: Descontado ${item.quantity}x producto`);
                     }
                 });
 
-                // Agregar bidones vacíos devueltos
+                // Agregar bidones vacíos devueltos (SOLO los que realmente devolvió el cliente)
                 if (returnedEmpty > 0) {
-                    const emptyProduct = db.products.find(p => p.category === 'bidon_vacio');
-                    if (emptyProduct) {
-                        const emptyInv = db.cashRegister.vehicleInventory.find(i => i.productId === emptyProduct.id);
-                        if (emptyInv) {
-                            emptyInv.quantity += returnedEmpty;
-                        } else {
-                            db.cashRegister.vehicleInventory.push({
-                                productId: emptyProduct.id,
-                                quantity: returnedEmpty
-                            });
+                    // Identificar qué tipos de recargas se vendieron
+                    const bclSold = items.some(item => {
+                        const product = db.products.find(p => p.id === item.productId);
+                        return product && product.name.toUpperCase().includes('RECARGA BCL');
+                    });
+                    const bslSold = items.some(item => {
+                        const product = db.products.find(p => p.id === item.productId);
+                        return product && product.name.toUpperCase().includes('RECARGA BSL');
+                    });
+
+                    // Determinar a qué bidón vacío sumar
+                    let emptyProductName = null;
+                    if (bclSold && !bslSold) {
+                        emptyProductName = 'BCL VACIO';
+                    } else if (bslSold && !bclSold) {
+                        emptyProductName = 'BSL VACIO';
+                    } else if (bclSold && bslSold) {
+                        // Si vendió ambos, sumar a BCL VACIO por defecto
+                        emptyProductName = 'BCL VACIO';
+                    }
+
+                    if (emptyProductName) {
+                        const emptyProduct = db.products.find(p => p.name.toUpperCase().includes(emptyProductName));
+                        if (emptyProduct) {
+                            const emptyInv = db.cashRegister.vehicleInventory.find(i => i.productId === emptyProduct.id);
+                            if (emptyInv) {
+                                emptyInv.quantity += returnedEmpty;
+                                console.log(`✅ Memoria: +${returnedEmpty}x ${emptyProductName} devueltos`);
+                            } else {
+                                db.cashRegister.vehicleInventory.push({
+                                    productId: emptyProduct.id,
+                                    quantity: returnedEmpty
+                                });
+                                console.log(`✅ Memoria: Creado +${returnedEmpty}x ${emptyProductName} devueltos`);
+                            }
                         }
                     }
                 }
