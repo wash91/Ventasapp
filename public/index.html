@@ -1008,6 +1008,50 @@
                             </table>
                         </div>
                     </div>
+
+                    <!-- Modal de Edición de Meta -->
+                    <div id="edit-goal-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full border-2 border-orange-500">
+                            <div class="bg-gradient-to-r from-orange-500 to-red-600 p-4 rounded-t-2xl">
+                                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    Editar Meta de Venta
+                                </h3>
+                            </div>
+                            <form id="edit-goal-form" class="p-6 space-y-4">
+                                <input type="hidden" id="edit-goal-id" value="">
+                                <div>
+                                    <label class="text-sm font-medium text-slate-700 dark:text-slate-300 block mb-2">Vendedor</label>
+                                    <input type="text" id="edit-goal-seller-name" disabled class="w-full p-2.5 border rounded-lg bg-slate-100 dark:bg-slate-700 dark:border-slate-600 cursor-not-allowed">
+                                    <p class="text-xs text-slate-500 mt-1">ℹ️ El vendedor no se puede cambiar</p>
+                                </div>
+                                <div>
+                                    <label class="text-sm font-medium text-slate-700 dark:text-slate-300 block mb-2">Mes</label>
+                                    <input type="month" id="edit-goal-month" class="w-full p-2.5 border rounded-lg dark:bg-slate-700 dark:border-slate-600 focus:ring-2 focus:ring-orange-500" required>
+                                </div>
+                                <div>
+                                    <label class="text-sm font-medium text-slate-700 dark:text-slate-300 block mb-2">Meta ($)</label>
+                                    <input type="number" id="edit-goal-amount" placeholder="5000.00" min="0" step="0.01" class="w-full p-2.5 border rounded-lg dark:bg-slate-700 dark:border-slate-600 focus:ring-2 focus:ring-orange-500" required>
+                                </div>
+                                <div class="flex gap-3 pt-4">
+                                    <button type="submit" class="flex-1 bg-orange-600 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-orange-700 transition">
+                                        <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                        Guardar Cambios
+                                    </button>
+                                    <button type="button" onclick="closeEditGoalModal()" class="flex-1 bg-slate-500 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-slate-600 transition">
+                                        <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                        Cancelar
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="admin-management" class="hidden">
@@ -14493,13 +14537,24 @@
                             </div>
                         </td>
                         <td class="py-3 px-6">
-                            <button onclick="downloadGoalPDF('${goalId}', '${goal.sellerId}', '${goal.month}', ${goal.goalAmount}, ${totalSold}, ${percentage})" class="text-blue-600 hover:text-blue-800 font-medium mr-3">
+                            <button onclick="editSalesGoal('${goalId}')" class="text-orange-600 hover:text-orange-800 font-medium mr-3" title="Editar meta">
+                                <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                                Editar
+                            </button>
+                            <button onclick="downloadGoalPDF('${goalId}', '${goal.sellerId}', '${goal.month}', ${goal.goalAmount}, ${totalSold}, ${percentage})" class="text-blue-600 hover:text-blue-800 font-medium mr-3" title="Descargar PDF">
                                 <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                 </svg>
                                 PDF
                             </button>
-                            <button onclick="deleteSalesGoal('${goalId}')" class="text-red-600 hover:text-red-800 font-medium">Eliminar</button>
+                            <button onclick="deleteSalesGoal('${goalId}')" class="text-red-600 hover:text-red-800 font-medium" title="Eliminar meta">
+                                <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                                Eliminar
+                            </button>
                         </td>
                     </tr>
                 `;
@@ -14523,6 +14578,87 @@
             alert('Error al eliminar la meta: ' + error.message);
         }
     }
+
+    /**
+     * Abre el modal de edición y carga los datos de la meta
+     */
+    async function editSalesGoal(goalId) {
+        try {
+            // Obtener los datos de la meta desde Firestore
+            const goalDoc = await db_firestore.collection('sales_goals').doc(goalId).get();
+
+            if (!goalDoc.exists) {
+                alert('❌ La meta no existe');
+                return;
+            }
+
+            const goalData = goalDoc.data();
+
+            // Obtener el nombre del vendedor
+            const seller = db.usersMap[goalData.sellerId];
+            const sellerName = seller ? (seller.displayName || seller.name || seller.email) : 'Usuario';
+
+            // Llenar el formulario del modal con los datos actuales
+            document.getElementById('edit-goal-id').value = goalId;
+            document.getElementById('edit-goal-seller-name').value = sellerName;
+            document.getElementById('edit-goal-month').value = goalData.month;
+            document.getElementById('edit-goal-amount').value = goalData.goalAmount;
+
+            // Mostrar el modal
+            document.getElementById('edit-goal-modal').classList.remove('hidden');
+
+            console.log('✏️ Editando meta:', goalId, goalData);
+        } catch (error) {
+            console.error('Error loading goal for editing:', error);
+            alert('Error al cargar la meta: ' + error.message);
+        }
+    }
+
+    /**
+     * Cierra el modal de edición
+     */
+    function closeEditGoalModal() {
+        document.getElementById('edit-goal-modal').classList.add('hidden');
+        document.getElementById('edit-goal-form').reset();
+    }
+
+    /**
+     * Maneja el submit del formulario de edición
+     */
+    document.getElementById('edit-goal-form')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const goalId = document.getElementById('edit-goal-id').value;
+        const newMonth = document.getElementById('edit-goal-month').value;
+        const newAmount = parseFloat(document.getElementById('edit-goal-amount').value);
+
+        if (!goalId || !newMonth || !newAmount || newAmount <= 0) {
+            alert('❌ Por favor completa todos los campos correctamente');
+            return;
+        }
+
+        try {
+            // Actualizar la meta en Firestore
+            await db_firestore.collection('sales_goals').doc(goalId).update({
+                month: newMonth,
+                goalAmount: newAmount,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            alert('✅ Meta actualizada correctamente');
+
+            // Cerrar el modal
+            closeEditGoalModal();
+
+            // Recargar la tabla de metas
+            loadSalesGoals();
+
+            console.log(`✅ Meta ${goalId} actualizada: Mes=${newMonth}, Monto=$${newAmount}`);
+        } catch (error) {
+            console.error('Error updating sales goal:', error);
+            alert('❌ Error al actualizar la meta: ' + error.message);
+        }
+    });
 
     async function downloadGoalPDF(goalId, sellerId, month, goalAmount, totalSold, overallPercentage) {
         try {
