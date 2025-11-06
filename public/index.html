@@ -3894,6 +3894,7 @@
     let db = { products: [], sales: [], expenses: [], collections: [], expenseTypes: [], clients: [], visits: [], whatsappTemplates: [], vehicles: [], cashRegister: { isOpen: false, openingBalance: 0, transactions: [] }, usersMap: {} };
     let currentSaleItems = [];
     let filteredAdminReportsData = {};
+    let isProcessingPayment = false;
     
     function getCurrentDate() {
         const now = new Date();
@@ -3912,7 +3913,7 @@
 
     const views = ['auth-view', 'admin-view', 'seller-view'];
     
-    function showView(viewId) { views.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); }); const targetViewEl = document.getElementById(`${viewId}-view`); if (targetViewEl) targetViewEl.classList.remove('hidden'); const sellerViewEl = document.getElementById('seller-view'); if (sellerViewEl) { viewId === 'seller' ? sellerViewEl.classList.add('flex') : sellerViewEl.classList.remove('flex'); } if (viewId === 'admin') { updateAdminDashboard(); } if (viewId === 'seller') { checkCashRegisterStatus(); updateSellerDashboard(); loadContainerSettings(); if(viewId === 'seller-credit-accounts') renderCreditAccounts(); } }
+    function showView(viewId) { views.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); }); const targetViewEl = document.getElementById(`${viewId}-view`); if (targetViewEl) targetViewEl.classList.remove('hidden'); const sellerViewEl = document.getElementById('seller-view'); if (sellerViewEl) { viewId === 'seller' ? sellerViewEl.classList.add('flex') : sellerViewEl.classList.remove('flex'); } if (viewId === 'admin') { updateAdminDashboard(); loadContainerSettingsForAdmin(); } if (viewId === 'seller') { checkCashRegisterStatus(); updateSellerDashboard(); loadContainerSettings(); if(viewId === 'seller-credit-accounts') renderCreditAccounts(); } }
     const loginForm = document.getElementById('login-form');
     const authError = document.getElementById('auth-error');
     
@@ -10398,31 +10399,6 @@
                 }
             });
 
-            // Si devolvieron bidones vacíos, incrementar inventario de bidones vacíos
-            if (returnedEmpty > 0) {
-                const emptyProduct = db.products.find(p => p.category === 'bidon_vacio');
-                if (emptyProduct) {
-                    const emptyInvDoc = inventorySnapshot.docs.find(doc => doc.data().productId === emptyProduct.id);
-                    if (emptyInvDoc) {
-                        const currentQty = emptyInvDoc.data().quantity;
-                        batch.update(emptyInvDoc.ref, {
-                            quantity: currentQty + returnedEmpty,
-                            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                    } else {
-                        // Crear nuevo registro de bidones vacíos
-                        const newInvRef = db_firestore.collection('vehicle_inventory').doc();
-                        batch.set(newInvRef, {
-                            vehicleId: vehicleId,
-                            productId: emptyProduct.id,
-                            quantity: returnedEmpty,
-                            sessionId: sessionId,
-                            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                    }
-                }
-            }
-
             await batch.commit();
 
             // Actualizar inventario en memoria (db.cashRegister.vehicleInventory)
@@ -10463,22 +10439,6 @@
                         }
                     }
                 });
-
-                // Agregar bidones vacíos devueltos
-                if (returnedEmpty > 0) {
-                    const emptyProduct = db.products.find(p => p.category === 'bidon_vacio');
-                    if (emptyProduct) {
-                        const emptyInv = db.cashRegister.vehicleInventory.find(i => i.productId === emptyProduct.id);
-                        if (emptyInv) {
-                            emptyInv.quantity += returnedEmpty;
-                        } else {
-                            db.cashRegister.vehicleInventory.push({
-                                productId: emptyProduct.id,
-                                quantity: returnedEmpty
-                            });
-                        }
-                    }
-                }
 
                 saveCashRegisterToStorage();
                 updateSellerDashboard();
@@ -12104,6 +12064,7 @@
                 div.className = 'flex items-center justify-between gap-3 bg-slate-50 dark:bg-slate-700 p-3 rounded-lg';
                 div.dataset.productId = product.id;
                 div.dataset.initialQty = initialQty;
+                div.dataset.currentQty = currentQty;
 
                 const categoryLabels = {
                     'bidon_lleno': 'Bidón Lleno',
@@ -12161,6 +12122,7 @@
         items.forEach(item => {
             const productId = item.dataset.productId;
             const initialQty = parseInt(item.dataset.initialQty) || 0;
+            const currentQty = parseInt(item.dataset.currentQty) || 0;
             const closingInput = document.getElementById(`closing-inv-${productId}`);
             const closingQty = parseInt(closingInput.value) || 0;
 
@@ -12174,7 +12136,8 @@
                 return sum + (saleItem ? saleItem.quantity : 0);
             }, 0);
 
-            const expectedQty = initialQty - soldQty;
+            // Usar inventario actual de Firestore como esperado (ya incluye compras, transferencias, pérdidas)
+            const expectedQty = currentQty;
             const difference = closingQty - expectedQty;
 
             if (difference !== 0) {
@@ -12667,7 +12630,7 @@
     }
     function openPaymentModal(saleId, balance) { const modal = document.getElementById('payment-modal'); const form = document.getElementById('add-payment-form'); const amountInput = document.getElementById('payment-amount'); form.dataset.saleId = saleId; document.getElementById('payment-modal-balance').textContent = `$${balance.toFixed(2)}`; amountInput.max = balance; modal.classList.remove('hidden'); }
     function closePaymentModal() { document.getElementById('payment-modal').classList.add('hidden'); }
-    async function finalizePayment(e) { e.preventDefault(); if (!db.cashRegister.isOpen) { alert("Abra la caja primero para registrar un cobro."); return; } const form = e.target; const saleId = form.dataset.saleId; const amount = parseFloat(document.getElementById('payment-amount').value); const balance = parseFloat(document.getElementById('payment-modal-balance').textContent.replace('$', '')); if (isNaN(amount) || amount <= 0 || amount > balance) { alert('Monto inválido.'); return; } const paymentData = { amount, date: getCurrentDate(), sellerId: auth.currentUser.uid }; const sale = db.sales.find(s => s.id === saleId); db.cashRegister.transactions.push({ type: 'collection', amount, reason: `Abono a venta para ${sale.clientName}` }); updateCashClosureSummary(); updateSellerDashboard(); renderCreditAccounts(); closePaymentModal(); alert(navigator.onLine ? 'Abono registrado con éxito.' : 'Abono guardado localmente. Se sincronizará al recuperar la conexión.'); db_firestore.collection('sales').doc(saleId).collection('payments').add(paymentData).catch(error => console.error("Error al sincronizar abono con Firestore: ", error)); }
+    async function finalizePayment(e) { e.preventDefault(); if (isProcessingPayment) { return; } if (!db.cashRegister.isOpen) { alert("Abra la caja primero para registrar un cobro."); return; } isProcessingPayment = true; try { const form = e.target; const saleId = form.dataset.saleId; const amount = parseFloat(document.getElementById('payment-amount').value); const balance = parseFloat(document.getElementById('payment-modal-balance').textContent.replace('$', '')); if (isNaN(amount) || amount <= 0 || amount > balance) { alert('Monto inválido.'); return; } const paymentData = { amount, date: getCurrentDate(), sellerId: auth.currentUser.uid }; const sale = db.sales.find(s => s.id === saleId); db.cashRegister.transactions.push({ type: 'collection', amount, reason: `Abono a venta para ${sale.clientName}` }); updateCashClosureSummary(); updateSellerDashboard(); renderCreditAccounts(); closePaymentModal(); alert(navigator.onLine ? 'Abono registrado con éxito.' : 'Abono guardado localmente. Se sincronizará al recuperar la conexión.'); await db_firestore.collection('sales').doc(saleId).collection('payments').add(paymentData); } catch (error) { console.error("Error al sincronizar abono con Firestore:", error); alert('Error al guardar el abono. Por favor intente nuevamente.'); } finally { isProcessingPayment = false; } }
 
     // ===== INGRESOS ADICIONALES =====
     function updateCollectionsModule() {
