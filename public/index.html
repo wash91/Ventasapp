@@ -1976,6 +1976,7 @@
                                                 <th class="py-3 px-4 text-left text-xs font-semibold">Fecha Esperada</th>
                                                 <th class="py-3 px-4 text-left text-xs font-semibold">Estado</th>
                                                 <th class="py-3 px-4 text-left text-xs font-semibold">Fecha Devolución</th>
+                                                <th class="py-3 px-4 text-left text-xs font-semibold">Acciones</th>
                                             </tr>
                                         </thead>
                                         <tbody id="loaned-containers-list" class="divide-y divide-slate-200 dark:divide-slate-700">
@@ -10352,7 +10353,13 @@
         const clientType = document.querySelector('input[name="client-type"]:checked').value;
         const paymentMethod = document.querySelector('input[name="sale-payment"]:checked').value;
         const paymentNote = document.getElementById('sale-transfer-note').value;
-        const returnedContainers = parseInt(document.getElementById('returned-containers')?.value) || 0;
+
+        // Capturar datos del checkbox y modal de bidones no devueltos
+        const clientHasNoContainer = document.getElementById('client-has-no-container')?.checked || false;
+        const loanExpectedReturnDate = document.getElementById('loan-expected-return-date')?.value || null;
+        const loanIsComodato = document.getElementById('loan-is-comodato')?.checked || false;
+        const loanObservation = document.getElementById('loan-observation')?.value || '';
+
         const loanedContainers = parseInt(document.getElementById('loan-containers')?.value) || 0;
 
         // Validar límite de préstamo
@@ -10377,7 +10384,7 @@
             paymentNote,
             items: currentSaleItems,
             total,
-            returnedContainers: returnedContainers,
+            clientHasNoContainer: clientHasNoContainer,
             loanedContainers: loanedContainers,
             status: (paymentMethod === 'credito' ? 'pendiente' : 'pagado'),
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -10410,8 +10417,13 @@
         document.getElementById('sale-form').reset();
         document.getElementById('sale-transfer-note').classList.add('hidden');
         document.getElementById('sale-quantity').value = 1;
-        document.getElementById('returned-containers').value = 0;
+        document.getElementById('client-has-no-container').checked = false;
         document.getElementById('loan-containers').value = 0;
+
+        // Limpiar campos del modal de préstamo
+        document.getElementById('loan-expected-return-date').value = '';
+        document.getElementById('loan-is-comodato').checked = false;
+        document.getElementById('loan-observation').value = '';
 
         // Limpiar campos de préstamo adicional
         document.getElementById('loan-return-date').value = '';
@@ -10438,17 +10450,22 @@
 
             // Actualizar inventario del vehículo en Firestore (intentará sincronizar)
             if (db.cashRegister.vehicleId && db.cashRegister.sessionId) {
-                await updateVehicleInventoryAfterSale(db.cashRegister.vehicleId, db.cashRegister.sessionId, soldItems, returnedContainers);
+                await updateVehicleInventoryAfterSale(
+                    db.cashRegister.vehicleId,
+                    db.cashRegister.sessionId,
+                    soldItems,
+                    clientHasNoContainer,
+                    currentSelectedClient,
+                    docRef.id,
+                    loanExpectedReturnDate,
+                    loanIsComodato,
+                    loanObservation
+                );
             }
 
-            // Registrar préstamo de bidones si aplica
+            // Registrar préstamo de bidones adicionales si aplica
             if (loanedContainers > 0 && currentSelectedClient) {
                 await registerContainerLoan(currentSelectedClient, loanedContainers, docRef.id);
-            }
-
-            // Actualizar devolución de bidones prestados
-            if (returnedContainers > 0 && currentSelectedClient) {
-                await processReturnedContainers(currentSelectedClient, returnedContainers, docRef.id);
             }
 
             if (navigator.onLine) {
@@ -10462,7 +10479,7 @@
         }
     }
 
-    async function updateVehicleInventoryAfterSale(vehicleId, sessionId, items, returnedEmpty) {
+    async function updateVehicleInventoryAfterSale(vehicleId, sessionId, items, clientHasNoContainer, clientId, saleId, loanExpectedReturnDate, loanIsComodato, loanObservation) {
         try {
             // Obtener inventario actual del vehículo
             const inventorySnapshot = await db_firestore.collection('vehicle_inventory')
@@ -10471,6 +10488,7 @@
                 .get();
 
             const batch = db_firestore.batch();
+            let notReturnedContainers = []; // Para registrar bidones no devueltos
 
             // Actualizar cantidades vendidas
             items.forEach(item => {
@@ -10498,59 +10516,87 @@
                     }
 
                     if (emptyProductName) {
-                        const emptyProduct = db.products.find(p => p.name.toUpperCase().includes(emptyProductName));
-                        if (emptyProduct) {
-                            const emptyInvDoc = inventorySnapshot.docs.find(doc => doc.data().productId === emptyProduct.id);
-                            if (emptyInvDoc) {
-                                // Ya existe, incrementar cantidad
-                                const currentEmptyQty = emptyInvDoc.data().quantity;
-                                batch.update(emptyInvDoc.ref, {
-                                    quantity: currentEmptyQty + item.quantity,
-                                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                                });
-                            } else {
-                                // No existe, crear nuevo registro
-                                const newInvRef = db_firestore.collection('vehicle_inventory').doc();
-                                batch.set(newInvRef, {
-                                    vehicleId: vehicleId,
-                                    productId: emptyProduct.id,
-                                    quantity: item.quantity,
-                                    sessionId: sessionId,
-                                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                                });
+                        // Si cliente NO devolvió bidón, registrar para préstamo pero NO agregar al inventario
+                        if (clientHasNoContainer) {
+                            notReturnedContainers.push({
+                                type: emptyProductName,
+                                quantity: item.quantity,
+                                productName: product.name
+                            });
+                            console.log(`⚠️ Cliente NO devolvió ${item.quantity}x ${emptyProductName} (se registrará como préstamo)`);
+                        } else {
+                            // Cliente SÍ devolvió, agregar al inventario
+                            const emptyProduct = db.products.find(p => p.name.toUpperCase().includes(emptyProductName));
+                            if (emptyProduct) {
+                                const emptyInvDoc = inventorySnapshot.docs.find(doc => doc.data().productId === emptyProduct.id);
+                                if (emptyInvDoc) {
+                                    // Ya existe, incrementar cantidad
+                                    const currentEmptyQty = emptyInvDoc.data().quantity;
+                                    batch.update(emptyInvDoc.ref, {
+                                        quantity: currentEmptyQty + item.quantity,
+                                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                                    });
+                                } else {
+                                    // No existe, crear nuevo registro
+                                    const newInvRef = db_firestore.collection('vehicle_inventory').doc();
+                                    batch.set(newInvRef, {
+                                        vehicleId: vehicleId,
+                                        productId: emptyProduct.id,
+                                        quantity: item.quantity,
+                                        sessionId: sessionId,
+                                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                                    });
+                                }
+                                console.log(`✅ ${item.quantity}x ${emptyProductName} agregados al inventario por venta de ${product.name}`);
                             }
-                            console.log(`✅ ${item.quantity}x ${emptyProductName} agregados al inventario por venta de ${product.name}`);
                         }
                     }
                 }
             });
 
-            // Si devolvieron bidones vacíos, incrementar inventario de bidones vacíos
-            if (returnedEmpty > 0) {
-                const emptyProduct = db.products.find(p => p.category === 'bidon_vacio');
-                if (emptyProduct) {
-                    const emptyInvDoc = inventorySnapshot.docs.find(doc => doc.data().productId === emptyProduct.id);
-                    if (emptyInvDoc) {
-                        const currentQty = emptyInvDoc.data().quantity;
-                        batch.update(emptyInvDoc.ref, {
-                            quantity: currentQty + returnedEmpty,
-                            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                    } else {
-                        // Crear nuevo registro de bidones vacíos
-                        const newInvRef = db_firestore.collection('vehicle_inventory').doc();
-                        batch.set(newInvRef, {
-                            vehicleId: vehicleId,
-                            productId: emptyProduct.id,
-                            quantity: returnedEmpty,
-                            sessionId: sessionId,
-                            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                    }
+            await batch.commit();
+
+            // ===== REGISTRAR PRÉSTAMOS POR BIDONES NO DEVUELTOS =====
+            if (notReturnedContainers.length > 0 && clientId && saleId) {
+                try {
+                    const totalNotReturned = notReturnedContainers.reduce((sum, c) => sum + c.quantity, 0);
+
+                    // Obtener nombre del cliente
+                    const clientDoc = await db_firestore.collection('clients').doc(clientId).get();
+                    const clientName = clientDoc.exists ? clientDoc.data().name : 'Cliente Desconocido';
+
+                    // Obtener configuración de depósito
+                    const containerSettings = await getContainerSettings();
+
+                    const loanData = {
+                        clientId: clientId,
+                        clientName: clientName,
+                        sellerId: auth.currentUser.uid,
+                        vehicleId: vehicleId,
+                        quantity: totalNotReturned,
+                        saleId: saleId,
+                        loanDate: getCurrentDate(),
+                        expectedReturnDate: loanExpectedReturnDate || null,
+                        isComodato: loanIsComodato || false,
+                        observation: loanObservation || '',
+                        depositAmount: containerSettings.depositAmount || 0,
+                        totalDeposit: (containerSettings.depositAmount || 0) * totalNotReturned,
+                        transactionType: 'no_devolucion',
+                        containerDetails: notReturnedContainers,
+                        status: 'active',
+                        returnedDate: null,
+                        returnedQuantity: 0,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+
+                    await db_firestore.collection('loaned_containers').add(loanData);
+                    console.log('✅ Préstamo registrado automáticamente:', loanData);
+
+                } catch (error) {
+                    console.error('❌ Error al registrar préstamo:', error);
+                    // No bloqueamos la venta, solo logueamos el error
                 }
             }
-
-            await batch.commit();
 
             // Actualizar inventario en memoria (db.cashRegister.vehicleInventory)
             if (db.cashRegister.vehicleInventory) {
@@ -10573,7 +10619,8 @@
                             emptyProductName = 'BSL VACIO';
                         }
 
-                        if (emptyProductName) {
+                        if (emptyProductName && !clientHasNoContainer) {
+                            // Solo agregar al inventario si el cliente SÍ devolvió el bidón
                             const emptyProduct = db.products.find(p => p.name.toUpperCase().includes(emptyProductName));
                             if (emptyProduct) {
                                 const emptyInv = db.cashRegister.vehicleInventory.find(i => i.productId === emptyProduct.id);
@@ -10590,22 +10637,6 @@
                         }
                     }
                 });
-
-                // Agregar bidones vacíos devueltos
-                if (returnedEmpty > 0) {
-                    const emptyProduct = db.products.find(p => p.category === 'bidon_vacio');
-                    if (emptyProduct) {
-                        const emptyInv = db.cashRegister.vehicleInventory.find(i => i.productId === emptyProduct.id);
-                        if (emptyInv) {
-                            emptyInv.quantity += returnedEmpty;
-                        } else {
-                            db.cashRegister.vehicleInventory.push({
-                                productId: emptyProduct.id,
-                                quantity: returnedEmpty
-                            });
-                        }
-                    }
-                }
 
                 saveCashRegisterToStorage();
                 updateSellerDashboard();
@@ -10817,6 +10848,19 @@
             row.dataset.clientName = (loan.clientName || '').toLowerCase();
             row.dataset.status = status;
 
+            // Determinar tipo de bidón para el modal
+            const containerType = loan.containerDetails && loan.containerDetails.length > 0
+                ? loan.containerDetails.map(c => c.type).join(', ')
+                : 'Bidón';
+
+            // Botón de acción solo para préstamos activos
+            const actionButton = status === 'active'
+                ? `<button onclick="openReturnContainersModal('${loan.id}', '${loan.clientName || 'Cliente'}', ${loan.quantity || 0}, '${containerType}')"
+                        class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg shadow transition">
+                        📦 Registrar Devolución
+                    </button>`
+                : '<span class="text-slate-400 dark:text-slate-500 text-xs">-</span>';
+
             row.innerHTML = `
                 <td class="py-3 px-4 text-sm">${loanDate}</td>
                 <td class="py-3 px-4 text-sm font-semibold">${loan.clientName || 'N/A'}</td>
@@ -10828,6 +10872,7 @@
                 <td class="py-3 px-4 text-sm text-center">${expectedReturnBadge}</td>
                 <td class="py-3 px-4 text-sm">${statusBadge}</td>
                 <td class="py-3 px-4 text-sm">${returnDate}</td>
+                <td class="py-3 px-4 text-sm text-center">${actionButton}</td>
             `;
 
             tbody.appendChild(row);
@@ -12827,6 +12872,133 @@
     function closeReturnContainersModal() {
         document.getElementById('return-containers-modal').classList.add('hidden');
         document.getElementById('return-containers-form').reset();
+    }
+
+    // Procesar devolución manual de bidones
+    async function processManualReturn(e) {
+        e.preventDefault();
+
+        const loanId = document.getElementById('return-loan-id').value;
+        const returnQuantity = parseInt(document.getElementById('return-quantity').value);
+        const returnDate = document.getElementById('return-date').value;
+        const returnObservation = document.getElementById('return-observation').value || '';
+
+        if (!loanId || !returnQuantity || !returnDate) {
+            alert('⚠️ Por favor complete todos los campos obligatorios');
+            return;
+        }
+
+        try {
+            // Obtener datos del préstamo
+            const loanDoc = await db_firestore.collection('loaned_containers').doc(loanId).get();
+            if (!loanDoc.exists) {
+                alert('❌ Préstamo no encontrado');
+                return;
+            }
+
+            const loanData = loanDoc.data();
+            const originalQuantity = loanData.quantity;
+            const previouslyReturned = loanData.returnedQuantity || 0;
+            const totalReturned = previouslyReturned + returnQuantity;
+
+            // Validar que no se devuelvan más de los prestados
+            if (totalReturned > originalQuantity) {
+                alert(`⚠️ No se pueden devolver más bidones de los prestados. Prestados: ${originalQuantity}, Ya devueltos: ${previouslyReturned}`);
+                return;
+            }
+
+            // Determinar nuevo estado
+            const newStatus = totalReturned >= originalQuantity ? 'returned' : 'partially_returned';
+
+            // Actualizar préstamo en Firestore
+            await db_firestore.collection('loaned_containers').doc(loanId).update({
+                status: newStatus,
+                returnedQuantity: totalReturned,
+                returnedDate: returnDate,
+                returnObservation: returnObservation,
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // Obtener vehículo activo del vendedor
+            const vehicleId = db.cashRegister?.vehicleId || loanData.vehicleId;
+            const sessionId = db.cashRegister?.sessionId;
+
+            if (!vehicleId || !sessionId) {
+                alert('⚠️ No hay sesión de caja abierta. Los bidones no se agregaron al inventario.');
+                closeReturnContainersModal();
+                await loadLoanedContainersFromFirestore();
+                renderLoanedContainersModule();
+                return;
+            }
+
+            // Agregar bidones vacíos al inventario del vehículo
+            // Determinar tipo de bidón basado en los detalles del préstamo
+            const containerDetails = loanData.containerDetails || [];
+
+            if (containerDetails.length > 0) {
+                // Hay detalles específicos del tipo de bidón
+                for (const containerDetail of containerDetails) {
+                    const emptyType = containerDetail.type; // 'BCL VACIO' o 'BSL VACIO'
+                    const emptyProduct = db.products.find(p => p.name.toUpperCase().includes(emptyType));
+
+                    if (emptyProduct) {
+                        // Buscar inventario existente
+                        const inventorySnapshot = await db_firestore.collection('vehicle_inventory')
+                            .where('vehicleId', '==', vehicleId)
+                            .where('sessionId', '==', sessionId)
+                            .where('productId', '==', emptyProduct.id)
+                            .get();
+
+                        if (!inventorySnapshot.empty) {
+                            // Actualizar existente
+                            const invDoc = inventorySnapshot.docs[0];
+                            const currentQty = invDoc.data().quantity;
+                            await invDoc.ref.update({
+                                quantity: currentQty + returnQuantity,
+                                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                        } else {
+                            // Crear nuevo registro
+                            await db_firestore.collection('vehicle_inventory').add({
+                                vehicleId: vehicleId,
+                                productId: emptyProduct.id,
+                                quantity: returnQuantity,
+                                sessionId: sessionId,
+                                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                        }
+
+                        // Actualizar inventario en memoria
+                        if (db.cashRegister.vehicleInventory) {
+                            const memoryInv = db.cashRegister.vehicleInventory.find(i => i.productId === emptyProduct.id);
+                            if (memoryInv) {
+                                memoryInv.quantity += returnQuantity;
+                            } else {
+                                db.cashRegister.vehicleInventory.push({
+                                    productId: emptyProduct.id,
+                                    quantity: returnQuantity
+                                });
+                            }
+                            saveCashRegisterToStorage();
+                        }
+
+                        console.log(`✅ ${returnQuantity}x ${emptyType} agregados al inventario`);
+                    }
+                }
+            }
+
+            // Cerrar modal y actualizar vista
+            closeReturnContainersModal();
+            alert(`✅ Devolución registrada exitosamente\n${returnQuantity} bidón(es) devuelto(s)`);
+
+            // Recargar datos y actualizar módulo
+            await loadLoanedContainersFromFirestore();
+            renderLoanedContainersModule();
+
+        } catch (error) {
+            console.error('❌ Error al procesar devolución:', error);
+            alert('❌ Error al procesar la devolución. Por favor intente nuevamente.');
+        }
     }
 
     // ===== INGRESOS ADICIONALES =====

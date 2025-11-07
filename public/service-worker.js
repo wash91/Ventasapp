@@ -1,5 +1,5 @@
 // Service Worker para funcionamiento offline
-const CACHE_NAME = 'ventas-v2';
+const CACHE_NAME = 'ventas-v5-manual-returns';
 const urlsToCache = [
   '/',
   '/index.html',
