@@ -3077,6 +3077,106 @@
         </div>
     </div>
 
+    <!-- Modal para Registrar Préstamo de Bidón No Devuelto -->
+    <div id="loan-details-modal" class="modal-overlay hidden">
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-amber-900 dark:text-amber-300 flex items-center gap-2">
+                    ⚠️ Detalles del Préstamo
+                </h2>
+                <button onclick="closeLoanDetailsModal()" class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="loan-details-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                        Fecha estimada de devolución
+                    </label>
+                    <input type="date" id="loan-expected-return-date" class="w-full p-3 border-2 border-amber-300 dark:border-amber-700 rounded-lg focus:ring-2 focus:ring-amber-500 dark:bg-slate-700 dark:text-white">
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Opcional - Dejar vacío si no hay fecha estimada</p>
+                </div>
+                <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="loan-is-comodato" class="w-4 h-4 rounded border-blue-400">
+                        <span class="text-sm font-semibold text-blue-900 dark:text-blue-300">
+                            Bidón en calidad de comodato
+                        </span>
+                    </label>
+                    <p class="text-xs text-blue-700 dark:text-blue-400 mt-1 ml-6">
+                        El bidón se presta sin fecha de devolución definida
+                    </p>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                        Observación (Opcional)
+                    </label>
+                    <textarea id="loan-observation" rows="3" class="w-full p-3 border-2 border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:text-white" placeholder="Comentarios adicionales..."></textarea>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" onclick="closeLoanDetailsModal()" class="bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-200 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-500">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="bg-amber-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-amber-700">
+                        Confirmar Préstamo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Registrar Devolución Manual -->
+    <div id="return-containers-modal" class="modal-overlay hidden">
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-green-900 dark:text-green-300 flex items-center gap-2">
+                    ✅ Registrar Devolución
+                </h2>
+                <button onclick="closeReturnContainersModal()" class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="return-containers-form" class="space-y-4">
+                <input type="hidden" id="return-loan-id">
+                <div class="bg-slate-50 dark:bg-slate-700 p-3 rounded-lg">
+                    <p class="text-sm text-slate-600 dark:text-slate-400"><strong>Cliente:</strong> <span id="return-client-name"></span></p>
+                    <p class="text-sm text-slate-600 dark:text-slate-400"><strong>Bidones prestados:</strong> <span id="return-total-loaned"></span></p>
+                    <p class="text-sm text-slate-600 dark:text-slate-400"><strong>Tipo:</strong> <span id="return-container-type"></span></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                        Cantidad devuelta <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" id="return-quantity" min="1" class="w-full p-3 border-2 border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-slate-700 dark:text-white" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                        Fecha de devolución <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" id="return-date" class="w-full p-3 border-2 border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-slate-700 dark:text-white" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                        Observación (Opcional)
+                    </label>
+                    <textarea id="return-observation" rows="2" class="w-full p-3 border-2 border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:text-white" placeholder="Comentarios adicionales..."></textarea>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" onclick="closeReturnContainersModal()" class="bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-200 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-500">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700">
+                        Confirmar Devolución
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal de Mapa de Visitas con Ruta Optimizada -->
     <div id="visits-map-modal" class="modal-overlay hidden">
         <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto">
@@ -12668,6 +12768,39 @@
     function openPaymentModal(saleId, balance) { const modal = document.getElementById('payment-modal'); const form = document.getElementById('add-payment-form'); const amountInput = document.getElementById('payment-amount'); form.dataset.saleId = saleId; document.getElementById('payment-modal-balance').textContent = `$${balance.toFixed(2)}`; amountInput.max = balance; modal.classList.remove('hidden'); }
     function closePaymentModal() { document.getElementById('payment-modal').classList.add('hidden'); }
     async function finalizePayment(e) { e.preventDefault(); if (!db.cashRegister.isOpen) { alert("Abra la caja primero para registrar un cobro."); return; } const form = e.target; const saleId = form.dataset.saleId; const amount = parseFloat(document.getElementById('payment-amount').value); const balance = parseFloat(document.getElementById('payment-modal-balance').textContent.replace('$', '')); if (isNaN(amount) || amount <= 0 || amount > balance) { alert('Monto inválido.'); return; } const paymentData = { amount, date: getCurrentDate(), sellerId: auth.currentUser.uid }; const sale = db.sales.find(s => s.id === saleId); db.cashRegister.transactions.push({ type: 'collection', amount, reason: `Abono a venta para ${sale.clientName}` }); updateCashClosureSummary(); updateSellerDashboard(); renderCreditAccounts(); closePaymentModal(); alert(navigator.onLine ? 'Abono registrado con éxito.' : 'Abono guardado localmente. Se sincronizará al recuperar la conexión.'); db_firestore.collection('sales').doc(saleId).collection('payments').add(paymentData).catch(error => console.error("Error al sincronizar abono con Firestore: ", error)); }
+
+    // ===== MODALES DE BIDONES PRESTADOS =====
+    function openLoanDetailsModal() {
+        document.getElementById('loan-details-modal').classList.remove('hidden');
+        // Establecer fecha de hoy como mínimo
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('loan-expected-return-date').min = today;
+    }
+    function closeLoanDetailsModal() {
+        document.getElementById('loan-details-modal').classList.add('hidden');
+        // Resetear formulario
+        document.getElementById('loan-details-form').reset();
+        // Desmarcar checkbox de no devolución
+        document.getElementById('client-has-no-container').checked = false;
+    }
+
+    function openReturnContainersModal(loanId, clientName, quantity, containerType) {
+        const modal = document.getElementById('return-containers-modal');
+        document.getElementById('return-loan-id').value = loanId;
+        document.getElementById('return-client-name').textContent = clientName;
+        document.getElementById('return-total-loaned').textContent = quantity;
+        document.getElementById('return-container-type').textContent = containerType || 'No especificado';
+        document.getElementById('return-quantity').max = quantity;
+        document.getElementById('return-quantity').value = quantity;
+        // Establecer fecha de hoy
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('return-date').value = today;
+        modal.classList.remove('hidden');
+    }
+    function closeReturnContainersModal() {
+        document.getElementById('return-containers-modal').classList.add('hidden');
+        document.getElementById('return-containers-form').reset();
+    }
 
     // ===== INGRESOS ADICIONALES =====
     function updateCollectionsModule() {
