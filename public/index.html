@@ -1508,15 +1508,17 @@
                                             </div>
                                         </div>
 
-                                        <!-- Bidones vacíos que devuelve el cliente -->
-                                        <div class="space-y-2 mb-3">
-                                            <label class="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400">¿Cliente devuelve bidones vacíos?</label>
-                                            <div class="flex items-center gap-3">
-                                                <button type="button" onclick="changeReturnedContainers(-1)" class="bg-red-500 text-white w-10 h-10 rounded-lg hover:bg-red-600 active:scale-95 transition font-bold text-xl">-</button>
-                                                <input type="number" id="returned-containers" value="0" min="0" class="w-20 p-3 text-center text-lg font-bold border-2 rounded-lg dark:bg-slate-700 dark:border-slate-600">
-                                                <button type="button" onclick="changeReturnedContainers(1)" class="bg-green-500 text-white w-10 h-10 rounded-lg hover:bg-green-600 active:scale-95 transition font-bold text-xl">+</button>
-                                                <span class="text-xs text-slate-500 dark:text-slate-400">bidones vacíos</span>
-                                            </div>
+                                        <!-- Checkbox cuando cliente NO devuelve bidón (solo visible con RECARGAS) -->
+                                        <div id="no-return-container-section" class="hidden space-y-2 mb-3 p-3 bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-lg">
+                                            <label class="flex items-center gap-2 cursor-pointer">
+                                                <input type="checkbox" id="client-has-no-container" class="w-4 h-4 rounded border-amber-400" onchange="handleNoContainerCheckbox()">
+                                                <span class="text-sm font-semibold text-amber-900 dark:text-amber-300">
+                                                    ⚠️ Cliente NO tiene bidón vacío para devolver
+                                                </span>
+                                            </label>
+                                            <p class="text-xs text-amber-700 dark:text-amber-400 ml-6">
+                                                Se abrirá un formulario para registrar el préstamo con fecha y condiciones
+                                            </p>
                                         </div>
 
                                         <!-- Préstamo de bidones llenos ADICIONALES -->
@@ -9879,6 +9881,15 @@
         });
         document.getElementById('add-payment-form').addEventListener('submit', finalizePayment);
 
+        // Event listeners para modales de bidones prestados
+        document.getElementById('loan-details-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Cerrar modal y dejar que completeSale() procese los datos
+            closeLoanDetailsModal();
+        });
+
+        document.getElementById('return-containers-form').addEventListener('submit', processManualReturn);
+
         // Event listener para el botón de escanear QR
         const scanQrBtn = document.getElementById('scan-qr-btn');
         if (scanQrBtn) {
@@ -9973,6 +9984,22 @@
                 </div>`;
         });
         totalEl.textContent = `$${total.toFixed(2)}`;
+
+        // Mostrar checkbox solo si hay RECARGAS en el carrito
+        const hasRecargas = currentSaleItems.some(item =>
+            item.name && (item.name.toUpperCase().includes('RECARGA BCL') || item.name.toUpperCase().includes('RECARGA BSL'))
+        );
+        const noReturnSection = document.getElementById('no-return-container-section');
+        if (noReturnSection) {
+            if (hasRecargas) {
+                noReturnSection.classList.remove('hidden');
+            } else {
+                noReturnSection.classList.add('hidden');
+                // Desmarcar checkbox si se quita la recarga del carrito
+                const checkbox = document.getElementById('client-has-no-container');
+                if (checkbox) checkbox.checked = false;
+            }
+        }
     }
 
     function clearSaleCart() {
@@ -10123,12 +10150,12 @@
 
     let currentSelectedClient = null; // Variable global para trackear cliente seleccionado
 
-    function changeReturnedContainers(delta) {
-        const input = document.getElementById('returned-containers');
-        if (input) {
-            const currentQty = parseInt(input.value) || 0;
-            const newQty = Math.max(0, currentQty + delta);
-            input.value = newQty;
+    // Manejar cuando el cliente NO devuelve bidón
+    function handleNoContainerCheckbox() {
+        const checkbox = document.getElementById('client-has-no-container');
+        if (checkbox && checkbox.checked) {
+            // Abrir modal para capturar detalles del préstamo
+            openLoanDetailsModal();
         }
     }
 
