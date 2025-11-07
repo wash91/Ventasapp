@@ -15,10 +15,10 @@ service cloud.firestore {
 
     // --- Reglas por Colección ---
 
-    // USERS: Los usuarios pueden leer su propia info. Admins leen todo.
+    // USERS: Los usuarios pueden leer su propia info. Todos pueden listar vendedores. Admins escriben.
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
-      allow list: if isAdmin();
+      allow list: if isSignedIn(); // Permitir a todos leer lista de vendedores (para mostrar nombres)
       allow write: if isAdmin();
     }
 
