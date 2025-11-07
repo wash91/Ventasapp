@@ -1508,15 +1508,17 @@
                                             </div>
                                         </div>
 
-                                        <!-- Bidones vacíos que devuelve el cliente -->
-                                        <div class="space-y-2 mb-3">
-                                            <label class="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400">¿Cliente devuelve bidones vacíos?</label>
-                                            <div class="flex items-center gap-3">
-                                                <button type="button" onclick="changeReturnedContainers(-1)" class="bg-red-500 text-white w-10 h-10 rounded-lg hover:bg-red-600 active:scale-95 transition font-bold text-xl">-</button>
-                                                <input type="number" id="returned-containers" value="0" min="0" class="w-20 p-3 text-center text-lg font-bold border-2 rounded-lg dark:bg-slate-700 dark:border-slate-600">
-                                                <button type="button" onclick="changeReturnedContainers(1)" class="bg-green-500 text-white w-10 h-10 rounded-lg hover:bg-green-600 active:scale-95 transition font-bold text-xl">+</button>
-                                                <span class="text-xs text-slate-500 dark:text-slate-400">bidones vacíos</span>
-                                            </div>
+                                        <!-- Checkbox cuando cliente NO devuelve bidón -->
+                                        <div id="no-return-container-section" class="hidden space-y-2 mb-3 p-3 bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-lg">
+                                            <label class="flex items-center gap-2 cursor-pointer">
+                                                <input type="checkbox" id="client-has-no-container" class="w-4 h-4 rounded border-amber-400">
+                                                <span class="text-sm font-semibold text-amber-900 dark:text-amber-300">
+                                                    ⚠️ Cliente NO tiene bidón vacío para devolver
+                                                </span>
+                                            </label>
+                                            <p class="text-xs text-amber-700 dark:text-amber-400 ml-6">
+                                                Se registrará como préstamo pendiente de devolución
+                                            </p>
                                         </div>
 
                                         <!-- Préstamo de bidones llenos ADICIONALES -->
@@ -9874,6 +9876,22 @@
                 </div>`;
         });
         totalEl.textContent = `$${total.toFixed(2)}`;
+
+        // Mostrar checkbox solo si hay RECARGAS en el carrito
+        const hasRecargas = currentSaleItems.some(item =>
+            item.name && (item.name.toUpperCase().includes('RECARGA BCL') || item.name.toUpperCase().includes('RECARGA BSL'))
+        );
+        const noReturnSection = document.getElementById('no-return-container-section');
+        if (noReturnSection) {
+            if (hasRecargas) {
+                noReturnSection.classList.remove('hidden');
+            } else {
+                noReturnSection.classList.add('hidden');
+                // Desmarcar checkbox si se quita la recarga del carrito
+                const checkbox = document.getElementById('client-has-no-container');
+                if (checkbox) checkbox.checked = false;
+            }
+        }
     }
 
     function clearSaleCart() {
@@ -10023,15 +10041,6 @@
     // ===== FUNCIONES DE GESTIÓN DE BIDONES RETORNABLES =====
 
     let currentSelectedClient = null; // Variable global para trackear cliente seleccionado
-
-    function changeReturnedContainers(delta) {
-        const input = document.getElementById('returned-containers');
-        if (input) {
-            const currentQty = parseInt(input.value) || 0;
-            const newQty = Math.max(0, currentQty + delta);
-            input.value = newQty;
-        }
-    }
 
     // Variable global para configuración de bidones
     let containerSettings = {
@@ -10226,7 +10235,7 @@
         const clientType = document.querySelector('input[name="client-type"]:checked').value;
         const paymentMethod = document.querySelector('input[name="sale-payment"]:checked').value;
         const paymentNote = document.getElementById('sale-transfer-note').value;
-        const returnedContainers = parseInt(document.getElementById('returned-containers')?.value) || 0;
+        const clientHasNoContainer = document.getElementById('client-has-no-container')?.checked || false;
         const loanedContainers = parseInt(document.getElementById('loan-containers')?.value) || 0;
 
         // Validar límite de préstamo
@@ -10251,7 +10260,7 @@
             paymentNote,
             items: currentSaleItems,
             total,
-            returnedContainers: returnedContainers,
+            clientHasNoContainer: clientHasNoContainer,
             loanedContainers: loanedContainers,
             status: (paymentMethod === 'credito' ? 'pendiente' : 'pagado'),
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -10284,7 +10293,7 @@
         document.getElementById('sale-form').reset();
         document.getElementById('sale-transfer-note').classList.add('hidden');
         document.getElementById('sale-quantity').value = 1;
-        document.getElementById('returned-containers').value = 0;
+        document.getElementById('client-has-no-container').checked = false;
         document.getElementById('loan-containers').value = 0;
 
         // Limpiar campos de préstamo adicional
@@ -10312,17 +10321,12 @@
 
             // Actualizar inventario del vehículo en Firestore (intentará sincronizar)
             if (db.cashRegister.vehicleId && db.cashRegister.sessionId) {
-                await updateVehicleInventoryAfterSale(db.cashRegister.vehicleId, db.cashRegister.sessionId, soldItems, returnedContainers);
+                await updateVehicleInventoryAfterSale(db.cashRegister.vehicleId, db.cashRegister.sessionId, soldItems, clientHasNoContainer, currentSelectedClient, docRef.id);
             }
 
-            // Registrar préstamo de bidones si aplica
+            // Registrar préstamo de bidones adicionales si aplica
             if (loanedContainers > 0 && currentSelectedClient) {
                 await registerContainerLoan(currentSelectedClient, loanedContainers, docRef.id);
-            }
-
-            // Actualizar devolución de bidones prestados
-            if (returnedContainers > 0 && currentSelectedClient) {
-                await processReturnedContainers(currentSelectedClient, returnedContainers, docRef.id);
             }
 
             if (navigator.onLine) {
@@ -10336,7 +10340,7 @@
         }
     }
 
-    async function updateVehicleInventoryAfterSale(vehicleId, sessionId, items, returnedEmpty) {
+    async function updateVehicleInventoryAfterSale(vehicleId, sessionId, items, clientHasNoContainer, clientId, saleId) {
         try {
             // Obtener inventario actual del vehículo
             const inventorySnapshot = await db_firestore.collection('vehicle_inventory')
@@ -10345,6 +10349,7 @@
                 .get();
 
             const batch = db_firestore.batch();
+            let notReturnedContainers = []; // Para registrar bidones no devueltos
 
             // Actualizar cantidades vendidas
             items.forEach(item => {
@@ -10372,28 +10377,40 @@
                     }
 
                     if (emptyProductName) {
-                        const emptyProduct = db.products.find(p => p.name.toUpperCase().includes(emptyProductName));
-                        if (emptyProduct) {
-                            const emptyInvDoc = inventorySnapshot.docs.find(doc => doc.data().productId === emptyProduct.id);
-                            if (emptyInvDoc) {
-                                // Ya existe, incrementar cantidad
-                                const currentEmptyQty = emptyInvDoc.data().quantity;
-                                batch.update(emptyInvDoc.ref, {
-                                    quantity: currentEmptyQty + item.quantity,
-                                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                                });
-                            } else {
-                                // No existe, crear nuevo registro
-                                const newInvRef = db_firestore.collection('vehicle_inventory').doc();
-                                batch.set(newInvRef, {
-                                    vehicleId: vehicleId,
-                                    productId: emptyProduct.id,
-                                    quantity: item.quantity,
-                                    sessionId: sessionId,
-                                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                                });
+                        // Verificar si cliente devolvió el bidón
+                        if (!clientHasNoContainer) {
+                            // Cliente SÍ devolvió el bidón → Sumar al inventario
+                            const emptyProduct = db.products.find(p => p.name.toUpperCase().includes(emptyProductName));
+                            if (emptyProduct) {
+                                const emptyInvDoc = inventorySnapshot.docs.find(doc => doc.data().productId === emptyProduct.id);
+                                if (emptyInvDoc) {
+                                    // Ya existe, incrementar cantidad
+                                    const currentEmptyQty = emptyInvDoc.data().quantity;
+                                    batch.update(emptyInvDoc.ref, {
+                                        quantity: currentEmptyQty + item.quantity,
+                                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                                    });
+                                } else {
+                                    // No existe, crear nuevo registro
+                                    const newInvRef = db_firestore.collection('vehicle_inventory').doc();
+                                    batch.set(newInvRef, {
+                                        vehicleId: vehicleId,
+                                        productId: emptyProduct.id,
+                                        quantity: item.quantity,
+                                        sessionId: sessionId,
+                                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                                    });
+                                }
+                                console.log(`✅ ${item.quantity}x ${emptyProductName} agregados al inventario por venta de ${product.name}`);
                             }
-                            console.log(`✅ ${item.quantity}x ${emptyProductName} agregados al inventario por venta de ${product.name}`);
+                        } else {
+                            // Cliente NO devolvió el bidón → Registrar para préstamo
+                            notReturnedContainers.push({
+                                type: emptyProductName,
+                                quantity: item.quantity,
+                                productName: product.name
+                            });
+                            console.log(`⚠️ Cliente NO devolvió ${item.quantity}x ${emptyProductName} (se registrará como préstamo)`);
                         }
                     }
                 }
@@ -10422,7 +10439,8 @@
                             emptyProductName = 'BSL VACIO';
                         }
 
-                        if (emptyProductName) {
+                        if (emptyProductName && !clientHasNoContainer) {
+                            // Solo sumar bidones vacíos si cliente SÍ devolvió
                             const emptyProduct = db.products.find(p => p.name.toUpperCase().includes(emptyProductName));
                             if (emptyProduct) {
                                 const emptyInv = db.cashRegister.vehicleInventory.find(i => i.productId === emptyProduct.id);
@@ -10442,6 +10460,40 @@
 
                 saveCashRegisterToStorage();
                 updateSellerDashboard();
+            }
+
+            // Registrar préstamos por bidones no devueltos
+            if (notReturnedContainers.length > 0 && clientId && saleId) {
+                const totalNotReturned = notReturnedContainers.reduce((sum, c) => sum + c.quantity, 0);
+
+                // Obtener nombre del cliente
+                const clientDoc = await db_firestore.collection('clients').doc(clientId).get();
+                const clientName = clientDoc.exists ? clientDoc.data().name : 'Cliente';
+
+                // Crear registro de préstamo
+                const loanData = {
+                    clientId: clientId,
+                    clientName: clientName,
+                    sellerId: auth.currentUser.uid,
+                    vehicleId: vehicleId,
+                    quantity: totalNotReturned,
+                    saleId: saleId,
+                    loanDate: getCurrentDate(),
+                    expectedReturnDate: null, // Se puede devolver en cualquier momento
+                    isComodato: false,
+                    depositAmount: containerSettings.depositAmount || 0,
+                    totalDeposit: totalNotReturned * (containerSettings.depositAmount || 0),
+                    transactionType: 'no_devolucion', // Tipo: cliente no devolvió bidón
+                    containerDetails: notReturnedContainers, // Detalles de qué bidones no devolvió
+                    status: 'active',
+                    returnedDate: null,
+                    returnedQuantity: 0,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                await db_firestore.collection('loaned_containers').add(loanData);
+
+                console.log(`✅ Registrado préstamo por ${totalNotReturned} bidón(es) no devuelto(s):`, notReturnedContainers.map(c => `${c.quantity}x ${c.type}`).join(', '));
             }
 
             console.log('✅ Inventario del vehículo actualizado');
