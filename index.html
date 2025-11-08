@@ -2209,7 +2209,8 @@
                         renderTodaySales();
                         loadSellerClosures();
                     }
-                    if (window.innerWidth < 768 && !sidebar.classList.contains('-translate-x-full')) {
+                    // Ocultar sidebar automáticamente al hacer clic en cualquier módulo
+                    if (!sidebar.classList.contains('-translate-x-full')) {
                         toggleSidebar();
                     }
                 });

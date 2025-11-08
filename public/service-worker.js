@@ -1,5 +1,5 @@
 // Service Worker para funcionamiento offline
-const CACHE_NAME = 'ventas-v6-sidebar-fix';
+const CACHE_NAME = 'ventas-v7-mobile-sidebar-fix';
 const urlsToCache = [
   '/',
   '/index.html',
