@@ -1,11 +1,8 @@
 // Service Worker para funcionamiento offline
-const CACHE_NAME = 'ventas-v7-mobile-sidebar-fix';
+const CACHE_NAME = 'ventas-v8-cors-fix';
 const urlsToCache = [
   '/',
-  '/index.html',
-  'https://unpkg.com/qrcode@1.5.0/build/qrcode.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
-  'https://unpkg.com/html5-qrcode@2.3.4/html5-qrcode.min.js'
+  '/index.html'
 ];
 
 // Instalación del Service Worker
