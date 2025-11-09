@@ -12586,38 +12586,98 @@
 
         const items = inventoryList.querySelectorAll('[data-product-id]');
         const differences = [];
+        const todayDate = getCurrentDate();
 
-        // Calcular diferencias de inventario
-        items.forEach(item => {
-            const productId = item.dataset.productId;
-            const initialQty = parseInt(item.dataset.initialQty) || 0;
-            const closingInput = document.getElementById(`closing-inv-${productId}`);
-            const closingQty = parseInt(closingInput.value) || 0;
+        try {
+            // 🔹 Consultar COMPRAS del día (desde expenses)
+            const purchasesSnapshot = await db_firestore.collection('expenses')
+                .where('sellerId', '==', auth.currentUser.uid)
+                .where('date', '==', todayDate)
+                .get();
 
-            const product = db.products.find(p => p.id === productId);
-            if (!product) return;
+            // 🔹 Consultar TRANSFERENCIAS APROBADAS recibidas por el vehículo actual
+            const transfersSnapshot = await db_firestore.collection('inventory_transfers')
+                .where('toVehicleId', '==', db.cashRegister.vehicleId)
+                .where('status', '==', 'approved')
+                .where('date', '==', todayDate)
+                .get();
 
-            // Calcular ventas del día de este producto
-            const todaySales = db.sales.filter(s => s.date === getCurrentDate() && s.sellerId === auth.currentUser.uid);
-            const soldQty = todaySales.reduce((sum, sale) => {
-                const saleItem = sale.items.find(i => i.productId === productId);
-                return sum + (saleItem ? saleItem.quantity : 0);
-            }, 0);
+            // 🔹 Consultar PÉRDIDAS/DAÑOS APROBADOS del vendedor
+            const lossesSnapshot = await db_firestore.collection('inventory_losses')
+                .where('sellerId', '==', auth.currentUser.uid)
+                .where('status', '==', 'approved')
+                .where('date', '==', todayDate)
+                .get();
 
-            const expectedQty = initialQty - soldQty;
-            const difference = closingQty - expectedQty;
+            // Procesar compras por producto
+            const purchasesByProduct = {};
+            purchasesSnapshot.docs.forEach(doc => {
+                const expense = doc.data();
+                if (expense.category && expense.category.toLowerCase().includes('compra de productos') && expense.productDetails) {
+                    expense.productDetails.forEach(item => {
+                        purchasesByProduct[item.productId] = (purchasesByProduct[item.productId] || 0) + item.quantity;
+                    });
+                }
+            });
 
-            if (difference !== 0) {
-                differences.push({
-                    productName: product.name,
-                    initial: initialQty,
-                    sold: soldQty,
-                    expected: expectedQty,
-                    physical: closingQty,
-                    difference: difference
-                });
+            // Procesar transferencias recibidas por producto
+            const transfersByProduct = {};
+            transfersSnapshot.docs.forEach(doc => {
+                const transfer = doc.data();
+                transfersByProduct[transfer.productId] = (transfersByProduct[transfer.productId] || 0) + transfer.quantity;
+            });
+
+            // Procesar pérdidas por producto
+            const lossesByProduct = {};
+            lossesSnapshot.docs.forEach(doc => {
+                const loss = doc.data();
+                lossesByProduct[loss.productId] = (lossesByProduct[loss.productId] || 0) + loss.quantity;
+            });
+
+            // Calcular diferencias de inventario
+            for (const item of items) {
+                const productId = item.dataset.productId;
+                const initialQty = parseInt(item.dataset.initialQty) || 0;
+                const closingInput = document.getElementById(`closing-inv-${productId}`);
+                const closingQty = parseInt(closingInput.value) || 0;
+
+                const product = db.products.find(p => p.id === productId);
+                if (!product) continue;
+
+                // Calcular ventas del día de este producto
+                const todaySales = db.sales.filter(s => s.date === todayDate && s.sellerId === auth.currentUser.uid);
+                const soldQty = todaySales.reduce((sum, sale) => {
+                    const saleItem = sale.items.find(i => i.productId === productId);
+                    return sum + (saleItem ? saleItem.quantity : 0);
+                }, 0);
+
+                // 🧮 FÓRMULA COMPLETA: Inicial + Compras + Transferencias - Ventas - Pérdidas
+                const comprasQty = purchasesByProduct[productId] || 0;
+                const transferenciasQty = transfersByProduct[productId] || 0;
+                const perdidasQty = lossesByProduct[productId] || 0;
+
+                const expectedQty = initialQty + comprasQty + transferenciasQty - soldQty - perdidasQty;
+                const difference = closingQty - expectedQty;
+
+                if (difference !== 0 || comprasQty > 0 || transferenciasQty > 0 || perdidasQty > 0) {
+                    differences.push({
+                        productName: product.name,
+                        initial: initialQty,
+                        compras: comprasQty,
+                        transferencias: transferenciasQty,
+                        sold: soldQty,
+                        perdidas: perdidasQty,
+                        expected: expectedQty,
+                        physical: closingQty,
+                        difference: difference
+                    });
+                }
             }
-        });
+        } catch (error) {
+            console.error('Error al calcular diferencias de inventario:', error);
+            alert('⚠️ Error al consultar operaciones de inventario. Revise la consola.');
+            return;
+        }
 
         // Mostrar diferencias
         if (differences.length === 0) {
@@ -12630,15 +12690,23 @@
                 const diffIcon = diff.difference > 0 ? '📈' : '📉';
 
                 return `
-                    <div class="flex justify-between items-center p-2 bg-white dark:bg-slate-800 rounded">
-                        <div class="flex-1">
+                    <div class="p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                        <div class="flex justify-between items-start mb-2">
                             <div class="font-semibold text-slate-900 dark:text-white">${diff.productName}</div>
-                            <div class="text-xs text-slate-600 dark:text-slate-400">
-                                Inicial: ${diff.initial} | Vendido: ${diff.sold} | Esperado: ${diff.expected} | Físico: ${diff.physical}
+                            <div class="${diffClass} font-bold text-lg">
+                                ${diffIcon} ${diffSign}${diff.difference}
                             </div>
                         </div>
-                        <div class="${diffClass} font-bold text-lg">
-                            ${diffIcon} ${diffSign}${diff.difference}
+                        <div class="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-400">
+                            <div><strong>Inicial:</strong> ${diff.initial}</div>
+                            <div><strong>Físico:</strong> ${diff.physical}</div>
+                            ${diff.compras > 0 ? `<div class="text-green-600 dark:text-green-400"><strong>+ Compras:</strong> ${diff.compras}</div>` : ''}
+                            ${diff.transferencias > 0 ? `<div class="text-blue-600 dark:text-blue-400"><strong>+ Transferencias:</strong> ${diff.transferencias}</div>` : ''}
+                            ${diff.sold > 0 ? `<div class="text-orange-600 dark:text-orange-400"><strong>- Vendidos:</strong> ${diff.sold}</div>` : ''}
+                            ${diff.perdidas > 0 ? `<div class="text-red-600 dark:text-red-400"><strong>- Pérdidas:</strong> ${diff.perdidas}</div>` : ''}
+                            <div class="col-span-2 pt-1 border-t border-slate-200 dark:border-slate-600 font-bold text-slate-900 dark:text-white">
+                                <strong>Esperado:</strong> ${diff.expected}
+                            </div>
                         </div>
                     </div>
                 `;
