@@ -1,5 +1,5 @@
 // Service Worker para funcionamiento offline
-const CACHE_NAME = 'ventas-v10-emergency-fix';
+const CACHE_NAME = 'ventas-v11-cors-fix';
 const urlsToCache = [
   '/',
   '/index.html'
