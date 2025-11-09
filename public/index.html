@@ -1508,14 +1508,100 @@
                                             </div>
                                         </div>
 
-                                        <!-- Bidones vacíos que devuelve el cliente -->
-                                        <div class="space-y-2 mb-3">
-                                            <label class="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400">¿Cliente devuelve bidones vacíos?</label>
+                                        <!-- Devolución de Bidones Retornables -->
+                                        <div class="space-y-3 mb-3 p-4 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 rounded-lg border-2 border-slate-200 dark:border-slate-600">
                                             <div class="flex items-center gap-3">
-                                                <button type="button" onclick="changeReturnedContainers(-1)" class="bg-red-500 text-white w-10 h-10 rounded-lg hover:bg-red-600 active:scale-95 transition font-bold text-xl">-</button>
-                                                <input type="number" id="returned-containers" value="0" min="0" class="w-20 p-3 text-center text-lg font-bold border-2 rounded-lg dark:bg-slate-700 dark:border-slate-600">
-                                                <button type="button" onclick="changeReturnedContainers(1)" class="bg-green-500 text-white w-10 h-10 rounded-lg hover:bg-green-600 active:scale-95 transition font-bold text-xl">+</button>
-                                                <span class="text-xs text-slate-500 dark:text-slate-400">bidones vacíos</span>
+                                                <input type="checkbox"
+                                                       id="client-not-returned-containers"
+                                                       class="w-5 h-5 text-orange-600 rounded border-2 border-slate-400 focus:ring-2 focus:ring-orange-500"
+                                                       onchange="toggleNotReturnedContainersForm()">
+                                                <label for="client-not-returned-containers" class="text-sm sm:text-base font-semibold text-slate-800 dark:text-slate-200 cursor-pointer select-none">
+                                                    ⚠️ Cliente NO devolvió bidón(es)
+                                                </label>
+                                            </div>
+
+                                            <p class="text-xs text-slate-600 dark:text-slate-400 ml-8">
+                                                ℹ️ <strong>Por defecto</strong>, el sistema asume que el cliente devuelve los bidones vacíos correspondientes a la venta. <br>
+                                                ✅ Si el cliente devuelve normalmente sus bidones, <strong>NO marques esta casilla</strong>.
+                                            </p>
+
+                                            <!-- Formulario que aparece cuando NO devuelve bidones -->
+                                            <div id="not-returned-form" class="hidden mt-4 space-y-3 p-4 bg-white dark:bg-slate-900 rounded-lg border-2 border-orange-300 dark:border-orange-700 shadow-lg">
+                                                <h4 class="text-sm font-bold text-orange-900 dark:text-orange-300 mb-3">
+                                                    📋 Registrar bidones NO devueltos
+                                                </h4>
+
+                                                <div class="grid grid-cols-2 gap-3">
+                                                    <!-- BCL no devueltos -->
+                                                    <div>
+                                                        <label class="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                                                            BCL no devueltos:
+                                                        </label>
+                                                        <input type="number"
+                                                               id="bcl-not-returned"
+                                                               value="0"
+                                                               min="0"
+                                                               max="50"
+                                                               class="w-full p-2 text-center text-lg font-bold border-2 border-orange-300 dark:border-orange-600 rounded-lg dark:bg-slate-800 dark:text-white"
+                                                               onchange="updateNotReturnedSummary()">
+                                                    </div>
+
+                                                    <!-- BSL no devueltos -->
+                                                    <div>
+                                                        <label class="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                                                            BSL no devueltos:
+                                                        </label>
+                                                        <input type="number"
+                                                               id="bsl-not-returned"
+                                                               value="0"
+                                                               min="0"
+                                                               max="50"
+                                                               class="w-full p-2 text-center text-lg font-bold border-2 border-orange-300 dark:border-orange-600 rounded-lg dark:bg-slate-800 dark:text-white"
+                                                               onchange="updateNotReturnedSummary()">
+                                                    </div>
+                                                </div>
+
+                                                <!-- Fecha estimada de devolución -->
+                                                <div>
+                                                    <label class="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                                                        Fecha estimada de devolución:
+                                                    </label>
+                                                    <input type="date"
+                                                           id="not-returned-expected-date"
+                                                           class="w-full p-2 text-sm border-2 border-slate-300 dark:border-slate-600 rounded-lg dark:bg-slate-800 dark:text-white">
+                                                </div>
+
+                                                <!-- Comodato -->
+                                                <div class="flex items-center gap-2">
+                                                    <input type="checkbox"
+                                                           id="not-returned-is-comodato"
+                                                           class="w-4 h-4 text-blue-600 rounded"
+                                                           onchange="toggleNotReturnedComodato()">
+                                                    <label for="not-returned-is-comodato" class="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                                                        📦 En calidad de comodato (préstamo indefinido)
+                                                    </label>
+                                                </div>
+
+                                                <!-- Observación -->
+                                                <div>
+                                                    <label class="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                                                        Observación o comentario (opcional):
+                                                    </label>
+                                                    <textarea id="not-returned-note"
+                                                              rows="2"
+                                                              class="w-full p-2 text-sm border-2 border-slate-300 dark:border-slate-600 rounded-lg dark:bg-slate-800 dark:text-white"
+                                                              placeholder="Ej: Cliente promete devolver mañana..."></textarea>
+                                                </div>
+
+                                                <!-- Resumen -->
+                                                <div id="not-returned-summary" class="hidden bg-orange-100 dark:bg-orange-900/30 p-3 rounded-lg border border-orange-300 dark:border-orange-700">
+                                                    <div class="text-sm font-semibold text-orange-900 dark:text-orange-300">
+                                                        📊 Total no devuelto: <span id="not-returned-total">0</span> bidón(es)
+                                                    </div>
+                                                    <div class="text-xs text-orange-700 dark:text-orange-400 mt-1">
+                                                        <span id="not-returned-breakdown"></span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -1968,12 +2054,13 @@
                                             <tr>
                                                 <th class="py-3 px-4 text-left text-xs font-semibold">Fecha Préstamo</th>
                                                 <th class="py-3 px-4 text-left text-xs font-semibold">Cliente</th>
+                                                <th class="py-3 px-4 text-left text-xs font-semibold">Tipo</th>
                                                 <th class="py-3 px-4 text-left text-xs font-semibold">Cantidad</th>
                                                 <th class="py-3 px-4 text-left text-xs font-semibold">Depósito</th>
                                                 <th class="py-3 px-4 text-left text-xs font-semibold">Días Prestado</th>
                                                 <th class="py-3 px-4 text-left text-xs font-semibold">Fecha Esperada</th>
                                                 <th class="py-3 px-4 text-left text-xs font-semibold">Estado</th>
-                                                <th class="py-3 px-4 text-left text-xs font-semibold">Fecha Devolución</th>
+                                                <th class="py-3 px-4 text-left text-xs font-semibold">Acciones</th>
                                             </tr>
                                         </thead>
                                         <tbody id="loaned-containers-list" class="divide-y divide-slate-200 dark:divide-slate-700">
@@ -10024,13 +10111,99 @@
 
     let currentSelectedClient = null; // Variable global para trackear cliente seleccionado
 
-    function changeReturnedContainers(delta) {
-        const input = document.getElementById('returned-containers');
-        if (input) {
-            const currentQty = parseInt(input.value) || 0;
-            const newQty = Math.max(0, currentQty + delta);
-            input.value = newQty;
+    // ===== FUNCIONES PARA CHECKBOX "CLIENTE NO DEVOLVIÓ BIDÓN" =====
+
+    function toggleNotReturnedContainersForm() {
+        const checkbox = document.getElementById('client-not-returned-containers');
+        const form = document.getElementById('not-returned-form');
+
+        if (checkbox && form) {
+            if (checkbox.checked) {
+                form.classList.remove('hidden');
+                // Auto-calcular bidones según productos en venta
+                autoCalculateNotReturnedContainers();
+            } else {
+                form.classList.add('hidden');
+                resetNotReturnedForm();
+            }
         }
+    }
+
+    function autoCalculateNotReturnedContainers() {
+        // Analizar productos vendidos y sugerir cantidades
+        let bclCount = 0;
+        let bslCount = 0;
+
+        currentSaleItems.forEach(item => {
+            const productName = item.name.toUpperCase();
+            if (productName.includes('RECARGA BCL') || productName.includes('BCL')) {
+                bclCount += item.quantity;
+            } else if (productName.includes('RECARGA BSL') || productName.includes('BSL')) {
+                bslCount += item.quantity;
+            }
+        });
+
+        // Pre-llenar con las cantidades detectadas
+        if (bclCount > 0) {
+            document.getElementById('bcl-not-returned').value = bclCount;
+        }
+        if (bslCount > 0) {
+            document.getElementById('bsl-not-returned').value = bslCount;
+        }
+
+        updateNotReturnedSummary();
+    }
+
+    function updateNotReturnedSummary() {
+        const bclQty = parseInt(document.getElementById('bcl-not-returned')?.value) || 0;
+        const bslQty = parseInt(document.getElementById('bsl-not-returned')?.value) || 0;
+        const total = bclQty + bslQty;
+
+        const summary = document.getElementById('not-returned-summary');
+        const totalSpan = document.getElementById('not-returned-total');
+        const breakdown = document.getElementById('not-returned-breakdown');
+
+        if (total > 0) {
+            summary?.classList.remove('hidden');
+            if (totalSpan) totalSpan.textContent = total;
+
+            let breakdownText = '';
+            if (bclQty > 0) breakdownText += `${bclQty} BCL`;
+            if (bslQty > 0) {
+                if (breakdownText) breakdownText += ' + ';
+                breakdownText += `${bslQty} BSL`;
+            }
+            if (breakdown) breakdown.textContent = breakdownText;
+        } else {
+            summary?.classList.add('hidden');
+        }
+    }
+
+    function toggleNotReturnedComodato() {
+        const checkbox = document.getElementById('not-returned-is-comodato');
+        const dateInput = document.getElementById('not-returned-expected-date');
+
+        if (checkbox?.checked) {
+            dateInput.disabled = true;
+            dateInput.value = '';
+            dateInput.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            dateInput.disabled = false;
+            dateInput.classList.remove('opacity-50', 'cursor-not-allowed');
+            // Sugerir fecha: 7 días desde hoy
+            const suggestedDate = new Date();
+            suggestedDate.setDate(suggestedDate.getDate() + 7);
+            dateInput.value = suggestedDate.toISOString().split('T')[0];
+        }
+    }
+
+    function resetNotReturnedForm() {
+        document.getElementById('bcl-not-returned').value = 0;
+        document.getElementById('bsl-not-returned').value = 0;
+        document.getElementById('not-returned-expected-date').value = '';
+        document.getElementById('not-returned-is-comodato').checked = false;
+        document.getElementById('not-returned-note').value = '';
+        document.getElementById('not-returned-summary')?.classList.add('hidden');
     }
 
     // Variable global para configuración de bidones
@@ -10226,14 +10399,60 @@
         const clientType = document.querySelector('input[name="client-type"]:checked').value;
         const paymentMethod = document.querySelector('input[name="sale-payment"]:checked').value;
         const paymentNote = document.getElementById('sale-transfer-note').value;
-        const returnedContainers = parseInt(document.getElementById('returned-containers')?.value) || 0;
+
+        // ===== NUEVA LÓGICA: CHECKBOX "CLIENTE NO DEVOLVIÓ BIDÓN" =====
+        const clientNotReturned = document.getElementById('client-not-returned-containers')?.checked || false;
+
+        // Estructuras para almacenar bidones devueltos y no devueltos
+        let returnedContainersData = {
+            bcl: 0,
+            bsl: 0,
+            total: 0
+        };
+
+        let notReturnedContainersData = {
+            bcl: 0,
+            bsl: 0,
+            total: 0,
+            expectedDate: null,
+            isComodato: false,
+            note: ''
+        };
+
+        if (clientNotReturned) {
+            // Cliente NO devolvió → leer datos del formulario
+            notReturnedContainersData.bcl = parseInt(document.getElementById('bcl-not-returned')?.value) || 0;
+            notReturnedContainersData.bsl = parseInt(document.getElementById('bsl-not-returned')?.value) || 0;
+            notReturnedContainersData.total = notReturnedContainersData.bcl + notReturnedContainersData.bsl;
+            notReturnedContainersData.expectedDate = document.getElementById('not-returned-expected-date')?.value || null;
+            notReturnedContainersData.isComodato = document.getElementById('not-returned-is-comodato')?.checked || false;
+            notReturnedContainersData.note = document.getElementById('not-returned-note')?.value || '';
+
+            // Validar que se haya ingresado al menos un bidón
+            if (notReturnedContainersData.total === 0) {
+                alert('❌ Debe indicar la cantidad de bidones BCL o BSL no devueltos.');
+                return;
+            }
+        } else {
+            // Cliente SÍ devolvió → calcular automáticamente según la venta
+            currentSaleItems.forEach(item => {
+                const productName = item.name.toUpperCase();
+                if (productName.includes('RECARGA BCL') || (productName.includes('BCL') && !productName.includes('VACIO'))) {
+                    returnedContainersData.bcl += item.quantity;
+                } else if (productName.includes('RECARGA BSL') || (productName.includes('BSL') && !productName.includes('VACIO'))) {
+                    returnedContainersData.bsl += item.quantity;
+                }
+            });
+            returnedContainersData.total = returnedContainersData.bcl + returnedContainersData.bsl;
+        }
+
         const loanedContainers = parseInt(document.getElementById('loan-containers')?.value) || 0;
 
-        // Validar límite de préstamo
+        // Validar límite de préstamo para bidones ADICIONALES
         if (loanedContainers > 0) {
             const isValid = await validateLoanLimit();
             if (!isValid) {
-                alert('❌ No se puede prestar esa cantidad de bidones. Excede el límite permitido para este cliente.');
+                alert('❌ No se puede prestar esa cantidad de bidones ADICIONALES. Excede el límite permitido para este cliente.');
                 return;
             }
         }
@@ -10251,7 +10470,9 @@
             paymentNote,
             items: currentSaleItems,
             total,
-            returnedContainers: returnedContainers,
+            // Nueva estructura para bidones devueltos y no devueltos
+            returnedContainers: returnedContainersData,
+            notReturnedContainers: notReturnedContainersData,
             loanedContainers: loanedContainers,
             status: (paymentMethod === 'credito' ? 'pendiente' : 'pagado'),
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -10284,8 +10505,15 @@
         document.getElementById('sale-form').reset();
         document.getElementById('sale-transfer-note').classList.add('hidden');
         document.getElementById('sale-quantity').value = 1;
-        document.getElementById('returned-containers').value = 0;
         document.getElementById('loan-containers').value = 0;
+
+        // Limpiar checkbox y formulario de bidones no devueltos
+        const notReturnedCheckbox = document.getElementById('client-not-returned-containers');
+        if (notReturnedCheckbox) {
+            notReturnedCheckbox.checked = false;
+        }
+        document.getElementById('not-returned-form')?.classList.add('hidden');
+        resetNotReturnedForm();
 
         // Limpiar campos de préstamo adicional
         document.getElementById('loan-return-date').value = '';
@@ -10312,17 +10540,22 @@
 
             // Actualizar inventario del vehículo en Firestore (intentará sincronizar)
             if (db.cashRegister.vehicleId && db.cashRegister.sessionId) {
-                await updateVehicleInventoryAfterSale(db.cashRegister.vehicleId, db.cashRegister.sessionId, soldItems, returnedContainers);
+                await updateVehicleInventoryAfterSale(db.cashRegister.vehicleId, db.cashRegister.sessionId, soldItems, returnedContainersData);
             }
 
-            // Registrar préstamo de bidones si aplica
-            if (loanedContainers > 0 && currentSelectedClient) {
-                await registerContainerLoan(currentSelectedClient, loanedContainers, docRef.id);
+            // Registrar préstamo de bidones ADICIONALES si aplica
+            if (loanedContainers > 0) {
+                await registerContainerLoan(currentSelectedClient, loanedContainers, docRef.id, 'additional');
             }
 
-            // Actualizar devolución de bidones prestados
-            if (returnedContainers > 0 && currentSelectedClient) {
-                await processReturnedContainers(currentSelectedClient, returnedContainers, docRef.id);
+            // Registrar préstamo cuando cliente NO devuelve bidones
+            if (notReturnedContainersData.total > 0) {
+                await registerNotReturnedContainersLoan(currentSelectedClient, notReturnedContainersData, docRef.id);
+            }
+
+            // Actualizar devolución de bidones prestados (si el cliente devolvió bidones)
+            if (returnedContainersData.total > 0) {
+                await processReturnedContainers(currentSelectedClient, returnedContainersData.total, docRef.id);
             }
 
             if (navigator.onLine) {
@@ -10336,7 +10569,7 @@
         }
     }
 
-    async function updateVehicleInventoryAfterSale(vehicleId, sessionId, items, returnedEmpty) {
+    async function updateVehicleInventoryAfterSale(vehicleId, sessionId, items, returnedContainersData) {
         try {
             // Obtener inventario actual del vehículo
             const inventorySnapshot = await db_firestore.collection('vehicle_inventory')
@@ -10359,70 +10592,51 @@
                 }
 
                 // ===== AGREGAR BIDÓN VACÍO AUTOMÁTICAMENTE =====
+                // Solo si el cliente SÍ devolvió los bidones (returnedContainersData.total > 0)
                 // Si se vende RECARGA BCL o RECARGA BSL, agregar bidón vacío correspondiente
-                const product = db.products.find(p => p.id === item.productId);
-                if (product) {
-                    const productName = product.name.toUpperCase();
-                    let emptyProductName = null;
+                if (returnedContainersData && returnedContainersData.total > 0) {
+                    const product = db.products.find(p => p.id === item.productId);
+                    if (product) {
+                        const productName = product.name.toUpperCase();
+                        let emptyProductName = null;
+                        let quantityToAdd = 0;
 
-                    if (productName.includes('RECARGA BCL')) {
-                        emptyProductName = 'BCL VACIO';
-                    } else if (productName.includes('RECARGA BSL')) {
-                        emptyProductName = 'BSL VACIO';
-                    }
+                        if (productName.includes('RECARGA BCL') || (productName.includes('BCL') && !productName.includes('VACIO'))) {
+                            emptyProductName = 'BCL VACIO';
+                            quantityToAdd = Math.min(item.quantity, returnedContainersData.bcl);
+                        } else if (productName.includes('RECARGA BSL') || (productName.includes('BSL') && !productName.includes('VACIO'))) {
+                            emptyProductName = 'BSL VACIO';
+                            quantityToAdd = Math.min(item.quantity, returnedContainersData.bsl);
+                        }
 
-                    if (emptyProductName) {
-                        const emptyProduct = db.products.find(p => p.name.toUpperCase().includes(emptyProductName));
-                        if (emptyProduct) {
-                            const emptyInvDoc = inventorySnapshot.docs.find(doc => doc.data().productId === emptyProduct.id);
-                            if (emptyInvDoc) {
-                                // Ya existe, incrementar cantidad
-                                const currentEmptyQty = emptyInvDoc.data().quantity;
-                                batch.update(emptyInvDoc.ref, {
-                                    quantity: currentEmptyQty + item.quantity,
-                                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                                });
-                            } else {
-                                // No existe, crear nuevo registro
-                                const newInvRef = db_firestore.collection('vehicle_inventory').doc();
-                                batch.set(newInvRef, {
-                                    vehicleId: vehicleId,
-                                    productId: emptyProduct.id,
-                                    quantity: item.quantity,
-                                    sessionId: sessionId,
-                                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                                });
+                        if (emptyProductName && quantityToAdd > 0) {
+                            const emptyProduct = db.products.find(p => p.name.toUpperCase().includes(emptyProductName));
+                            if (emptyProduct) {
+                                const emptyInvDoc = inventorySnapshot.docs.find(doc => doc.data().productId === emptyProduct.id);
+                                if (emptyInvDoc) {
+                                    // Ya existe, incrementar cantidad
+                                    const currentEmptyQty = emptyInvDoc.data().quantity;
+                                    batch.update(emptyInvDoc.ref, {
+                                        quantity: currentEmptyQty + quantityToAdd,
+                                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                                    });
+                                } else {
+                                    // No existe, crear nuevo registro
+                                    const newInvRef = db_firestore.collection('vehicle_inventory').doc();
+                                    batch.set(newInvRef, {
+                                        vehicleId: vehicleId,
+                                        productId: emptyProduct.id,
+                                        quantity: quantityToAdd,
+                                        sessionId: sessionId,
+                                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                                    });
+                                }
+                                console.log(`✅ ${quantityToAdd}x ${emptyProductName} agregados al inventario por venta de ${product.name}`);
                             }
-                            console.log(`✅ ${item.quantity}x ${emptyProductName} agregados al inventario por venta de ${product.name}`);
                         }
                     }
                 }
             });
-
-            // Si devolvieron bidones vacíos, incrementar inventario de bidones vacíos
-            if (returnedEmpty > 0) {
-                const emptyProduct = db.products.find(p => p.category === 'bidon_vacio');
-                if (emptyProduct) {
-                    const emptyInvDoc = inventorySnapshot.docs.find(doc => doc.data().productId === emptyProduct.id);
-                    if (emptyInvDoc) {
-                        const currentQty = emptyInvDoc.data().quantity;
-                        batch.update(emptyInvDoc.ref, {
-                            quantity: currentQty + returnedEmpty,
-                            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                    } else {
-                        // Crear nuevo registro de bidones vacíos
-                        const newInvRef = db_firestore.collection('vehicle_inventory').doc();
-                        batch.set(newInvRef, {
-                            vehicleId: vehicleId,
-                            productId: emptyProduct.id,
-                            quantity: returnedEmpty,
-                            sessionId: sessionId,
-                            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                    }
-                }
-            }
 
             await batch.commit();
 
@@ -10436,50 +10650,40 @@
                     }
 
                     // ===== AGREGAR BIDÓN VACÍO AUTOMÁTICAMENTE EN MEMORIA =====
-                    const product = db.products.find(p => p.id === item.productId);
-                    if (product) {
-                        const productName = product.name.toUpperCase();
-                        let emptyProductName = null;
+                    // Solo si el cliente SÍ devolvió los bidones
+                    if (returnedContainersData && returnedContainersData.total > 0) {
+                        const product = db.products.find(p => p.id === item.productId);
+                        if (product) {
+                            const productName = product.name.toUpperCase();
+                            let emptyProductName = null;
+                            let quantityToAdd = 0;
 
-                        if (productName.includes('RECARGA BCL')) {
-                            emptyProductName = 'BCL VACIO';
-                        } else if (productName.includes('RECARGA BSL')) {
-                            emptyProductName = 'BSL VACIO';
-                        }
+                            if (productName.includes('RECARGA BCL') || (productName.includes('BCL') && !productName.includes('VACIO'))) {
+                                emptyProductName = 'BCL VACIO';
+                                quantityToAdd = Math.min(item.quantity, returnedContainersData.bcl);
+                            } else if (productName.includes('RECARGA BSL') || (productName.includes('BSL') && !productName.includes('VACIO'))) {
+                                emptyProductName = 'BSL VACIO';
+                                quantityToAdd = Math.min(item.quantity, returnedContainersData.bsl);
+                            }
 
-                        if (emptyProductName) {
-                            const emptyProduct = db.products.find(p => p.name.toUpperCase().includes(emptyProductName));
-                            if (emptyProduct) {
-                                const emptyInv = db.cashRegister.vehicleInventory.find(i => i.productId === emptyProduct.id);
-                                if (emptyInv) {
-                                    emptyInv.quantity += item.quantity;
-                                } else {
-                                    db.cashRegister.vehicleInventory.push({
-                                        productId: emptyProduct.id,
-                                        quantity: item.quantity
-                                    });
+                            if (emptyProductName && quantityToAdd > 0) {
+                                const emptyProduct = db.products.find(p => p.name.toUpperCase().includes(emptyProductName));
+                                if (emptyProduct) {
+                                    const emptyInv = db.cashRegister.vehicleInventory.find(i => i.productId === emptyProduct.id);
+                                    if (emptyInv) {
+                                        emptyInv.quantity += quantityToAdd;
+                                    } else {
+                                        db.cashRegister.vehicleInventory.push({
+                                            productId: emptyProduct.id,
+                                            quantity: quantityToAdd
+                                        });
+                                    }
+                                    console.log(`✅ Inventario en memoria: +${quantityToAdd} ${emptyProductName}`);
                                 }
-                                console.log(`✅ Inventario en memoria: +${item.quantity} ${emptyProductName}`);
                             }
                         }
                     }
                 });
-
-                // Agregar bidones vacíos devueltos
-                if (returnedEmpty > 0) {
-                    const emptyProduct = db.products.find(p => p.category === 'bidon_vacio');
-                    if (emptyProduct) {
-                        const emptyInv = db.cashRegister.vehicleInventory.find(i => i.productId === emptyProduct.id);
-                        if (emptyInv) {
-                            emptyInv.quantity += returnedEmpty;
-                        } else {
-                            db.cashRegister.vehicleInventory.push({
-                                productId: emptyProduct.id,
-                                quantity: returnedEmpty
-                            });
-                        }
-                    }
-                }
 
                 saveCashRegisterToStorage();
                 updateSellerDashboard();
@@ -10491,7 +10695,7 @@
         }
     }
 
-    async function registerContainerLoan(clientId, quantity, saleId) {
+    async function registerContainerLoan(clientId, quantity, saleId, loanType = 'additional_loan') {
         try {
             // Obtener valores de la UI
             const returnDate = document.getElementById('loan-return-date')?.value || null;
@@ -10508,6 +10712,7 @@
                 clientName: clientName,
                 sellerId: auth.currentUser.uid,
                 vehicleId: db.cashRegister.vehicleId || null,
+                containerType: null,  // Bidones adicionales no especifican tipo
                 quantity: quantity,
                 saleId: saleId,
                 loanDate: getCurrentDate(),
@@ -10515,8 +10720,9 @@
                 isComodato: isComodato,
                 depositAmount: depositAmount,
                 totalDeposit: totalDeposit,
-                transactionType: 'additional_loan', // Para diferenciarlo de otros préstamos
+                transactionType: loanType,
                 status: 'active',
+                note: '',
                 returnedDate: null,
                 returnedQuantity: 0,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -10572,6 +10778,88 @@
             console.log(`✅ Procesada devolución de ${quantity} bidones`);
         } catch (error) {
             console.error('Error procesando devolución de bidones:', error);
+        }
+    }
+
+    // ===== REGISTRAR PRÉSTAMO DE BIDONES NO DEVUELTOS =====
+    async function registerNotReturnedContainersLoan(clientId, notReturnedData, saleId) {
+        try {
+            // Obtener nombre del cliente
+            const clientDoc = await db_firestore.collection('clients').doc(clientId).get();
+            const clientName = clientDoc.exists ? clientDoc.data().name : 'Cliente';
+
+            const batch = db_firestore.batch();
+            let totalRegistered = 0;
+
+            // Registrar préstamo de BCL si aplica
+            if (notReturnedData.bcl > 0) {
+                const bclLoanRef = db_firestore.collection('loaned_containers').doc();
+                const bclLoanData = {
+                    clientId: clientId,
+                    clientName: clientName,
+                    sellerId: auth.currentUser.uid,
+                    vehicleId: db.cashRegister.vehicleId || null,
+                    containerType: 'BCL',  // Nuevo campo para distinguir tipo
+                    quantity: notReturnedData.bcl,
+                    saleId: saleId,
+                    loanDate: getCurrentDate(),
+                    expectedReturnDate: notReturnedData.isComodato ? null : notReturnedData.expectedDate,
+                    isComodato: notReturnedData.isComodato,
+                    depositAmount: 0,  // No se cobra depósito porque no devolvió
+                    totalDeposit: 0,
+                    transactionType: 'not_returned',  // Tipo específico para no devueltos
+                    status: 'active',
+                    note: notReturnedData.note || '',
+                    returnedDate: null,
+                    returnedQuantity: 0,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                batch.set(bclLoanRef, bclLoanData);
+                totalRegistered += notReturnedData.bcl;
+                console.log(`✅ Registrado préstamo: ${notReturnedData.bcl} BCL no devueltos`);
+            }
+
+            // Registrar préstamo de BSL si aplica
+            if (notReturnedData.bsl > 0) {
+                const bslLoanRef = db_firestore.collection('loaned_containers').doc();
+                const bslLoanData = {
+                    clientId: clientId,
+                    clientName: clientName,
+                    sellerId: auth.currentUser.uid,
+                    vehicleId: db.cashRegister.vehicleId || null,
+                    containerType: 'BSL',  // Nuevo campo para distinguir tipo
+                    quantity: notReturnedData.bsl,
+                    saleId: saleId,
+                    loanDate: getCurrentDate(),
+                    expectedReturnDate: notReturnedData.isComodato ? null : notReturnedData.expectedDate,
+                    isComodato: notReturnedData.isComodato,
+                    depositAmount: 0,
+                    totalDeposit: 0,
+                    transactionType: 'not_returned',
+                    status: 'active',
+                    note: notReturnedData.note || '',
+                    returnedDate: null,
+                    returnedQuantity: 0,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                batch.set(bslLoanRef, bslLoanData);
+                totalRegistered += notReturnedData.bsl;
+                console.log(`✅ Registrado préstamo: ${notReturnedData.bsl} BSL no devueltos`);
+            }
+
+            await batch.commit();
+
+            console.log(`✅ Total registrado: ${totalRegistered} bidones no devueltos`);
+            if (notReturnedData.isComodato) {
+                console.log('   - En calidad de COMODATO');
+            } else if (notReturnedData.expectedDate) {
+                console.log(`   - Fecha esperada de devolución: ${notReturnedData.expectedDate}`);
+            }
+            if (notReturnedData.note) {
+                console.log(`   - Nota: ${notReturnedData.note}`);
+            }
+        } catch (error) {
+            console.error('Error registrando bidones no devueltos:', error);
         }
     }
 
@@ -10686,6 +10974,28 @@
                 ? `<span class="font-semibold text-green-700 dark:text-green-400">$${loan.totalDeposit.toFixed(2)}</span>`
                 : '-';
 
+            // Determinar tipo de bidón
+            let containerTypeBadge;
+            if (loan.containerType === 'BCL') {
+                containerTypeBadge = '<span class="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-bold rounded">BCL</span>';
+            } else if (loan.containerType === 'BSL') {
+                containerTypeBadge = '<span class="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs font-bold rounded">BSL</span>';
+            } else {
+                containerTypeBadge = '<span class="px-2 py-1 bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 text-xs font-bold rounded">Mixto</span>';
+            }
+
+            // Botón de acciones (solo para préstamos activos)
+            let actionsHtml = '-';
+            if (status === 'active') {
+                actionsHtml = `<button
+                    onclick="showReturnContainerDialog('${loan.id}', '${loan.clientName}', ${loan.quantity}, '${loan.containerType || 'Mixto'}')"
+                    class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition">
+                    ✅ Registrar Devolución
+                </button>`;
+            } else {
+                actionsHtml = '<span class="text-xs text-slate-500">Devuelto</span>';
+            }
+
             const row = document.createElement('tr');
             row.className = 'hover:bg-slate-50 dark:hover:bg-slate-700';
             row.dataset.clientName = (loan.clientName || '').toLowerCase();
@@ -10694,6 +11004,7 @@
             row.innerHTML = `
                 <td class="py-3 px-4 text-sm">${loanDate}</td>
                 <td class="py-3 px-4 text-sm font-semibold">${loan.clientName || 'N/A'}</td>
+                <td class="py-3 px-4 text-sm text-center">${containerTypeBadge}</td>
                 <td class="py-3 px-4 text-sm text-center">
                     <span class="px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded font-bold">${loan.quantity || 0}</span>
                 </td>
@@ -10701,7 +11012,7 @@
                 <td class="py-3 px-4 text-sm text-center">${daysBorrowed} ${daysBorrowed !== '-' ? 'día(s)' : ''}</td>
                 <td class="py-3 px-4 text-sm text-center">${expectedReturnBadge}</td>
                 <td class="py-3 px-4 text-sm">${statusBadge}</td>
-                <td class="py-3 px-4 text-sm">${returnDate}</td>
+                <td class="py-3 px-4 text-sm text-center">${actionsHtml}</td>
             `;
 
             tbody.appendChild(row);
@@ -10727,6 +11038,124 @@
                 row.style.display = 'none';
             }
         });
+    }
+
+    // ===== REGISTRAR DEVOLUCIÓN DE BIDONES SIN VENTA =====
+    async function showReturnContainerDialog(loanId, clientName, quantity, containerType) {
+        const confirmMessage = `¿Confirmar devolución de ${quantity} bidón(es) ${containerType} de ${clientName}?\n\n` +
+            'Esto actualizará automáticamente el inventario del camión.';
+
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        try {
+            await processManualContainerReturn(loanId, containerType, quantity);
+            alert('✅ Devolución registrada exitosamente!');
+            await loadLoanedContainersModule(); // Recargar la lista
+        } catch (error) {
+            console.error('Error registrando devolución:', error);
+            alert('❌ Error al registrar la devolución. Por favor intente nuevamente.');
+        }
+    }
+
+    async function processManualContainerReturn(loanId, containerType, quantity) {
+        try {
+            // 1. Actualizar el préstamo a estado "returned"
+            await db_firestore.collection('loaned_containers').doc(loanId).update({
+                status: 'returned',
+                returnDate: getCurrentDate(),
+                returnedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            console.log(`✅ Préstamo ${loanId} marcado como devuelto`);
+
+            // 2. Actualizar inventario del camión agregando bidones vacíos
+            if (db.cashRegister.vehicleId && db.cashRegister.sessionId) {
+                await updateVehicleInventoryWithReturnedContainers(
+                    db.cashRegister.vehicleId,
+                    db.cashRegister.sessionId,
+                    containerType,
+                    quantity
+                );
+            }
+
+            // 3. Actualizar inventario local en memoria
+            if (db.cashRegister.vehicleInventory && containerType !== 'Mixto') {
+                const emptyProductName = containerType === 'BCL' ? 'BCL VACIO' : 'BSL VACIO';
+                const emptyProduct = db.products.find(p => p.name.toUpperCase().includes(emptyProductName));
+
+                if (emptyProduct) {
+                    const emptyInv = db.cashRegister.vehicleInventory.find(i => i.productId === emptyProduct.id);
+                    if (emptyInv) {
+                        emptyInv.quantity += quantity;
+                    } else {
+                        db.cashRegister.vehicleInventory.push({
+                            productId: emptyProduct.id,
+                            quantity: quantity
+                        });
+                    }
+                    saveCashRegisterToStorage();
+                    updateSellerDashboard();
+                    console.log(`✅ Inventario local actualizado: +${quantity} ${emptyProductName}`);
+                }
+            }
+
+        } catch (error) {
+            console.error('Error en processManualContainerReturn:', error);
+            throw error;
+        }
+    }
+
+    async function updateVehicleInventoryWithReturnedContainers(vehicleId, sessionId, containerType, quantity) {
+        try {
+            // Solo actualizar si el tipo es BCL o BSL (no Mixto)
+            if (containerType === 'Mixto' || !containerType) {
+                console.log('⚠️ No se puede actualizar inventario para tipo "Mixto"');
+                return;
+            }
+
+            const inventorySnapshot = await db_firestore.collection('vehicle_inventory')
+                .where('vehicleId', '==', vehicleId)
+                .where('sessionId', '==', sessionId)
+                .get();
+
+            const emptyProductName = containerType === 'BCL' ? 'BCL VACIO' : 'BSL VACIO';
+            const emptyProduct = db.products.find(p => p.name.toUpperCase().includes(emptyProductName));
+
+            if (!emptyProduct) {
+                console.error(`❌ No se encontró producto ${emptyProductName}`);
+                return;
+            }
+
+            const batch = db_firestore.batch();
+            const emptyInvDoc = inventorySnapshot.docs.find(doc => doc.data().productId === emptyProduct.id);
+
+            if (emptyInvDoc) {
+                // Ya existe, incrementar cantidad
+                const currentQty = emptyInvDoc.data().quantity;
+                batch.update(emptyInvDoc.ref, {
+                    quantity: currentQty + quantity,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } else {
+                // No existe, crear nuevo registro
+                const newInvRef = db_firestore.collection('vehicle_inventory').doc();
+                batch.set(newInvRef, {
+                    vehicleId: vehicleId,
+                    productId: emptyProduct.id,
+                    quantity: quantity,
+                    sessionId: sessionId,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+
+            await batch.commit();
+            console.log(`✅ Firestore: +${quantity} ${emptyProductName} agregados al inventario`);
+        } catch (error) {
+            console.error('Error actualizando inventario en Firestore:', error);
+            throw error;
+        }
     }
 
     async function finalizeCollection(e) {
