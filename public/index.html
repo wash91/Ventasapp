@@ -12620,7 +12620,7 @@
             const purchasesByProduct = {};
             purchasesSnapshot.docs.forEach(doc => {
                 const expense = doc.data();
-                if (expense.category && expense.category.toLowerCase().includes('compra de productos') && expense.productDetails) {
+                if (expense.categoryName && expense.categoryName.toLowerCase().includes('compra de productos') && expense.productDetails) {
                     expense.productDetails.forEach(item => {
                         purchasesByProduct[item.productId] = (purchasesByProduct[item.productId] || 0) + item.quantity;
                     });
@@ -12658,12 +12658,69 @@
                 const product = db.products.find(p => p.id === productId);
                 if (!product) continue;
 
-                // Calcular ventas del día de este producto
+                const productName = product.name.toUpperCase();
+                const isBclVacio = productName.includes('BCL') && productName.includes('VACIO');
+                const isBslVacio = productName.includes('BSL') && productName.includes('VACIO');
+                const isEmptyContainer = isBclVacio || isBslVacio;
+
+                let soldQty = 0;
+                let emptyContainersIn = 0; // Vacíos que ingresaron por ventas de recargas
+                let emptyContainersOut = 0; // Vacíos que se consumieron por compras de recargas
+
                 const todaySales = db.sales.filter(s => s.date === todayDate && s.sellerId === auth.currentUser.uid);
-                const soldQty = todaySales.reduce((sum, sale) => {
-                    const saleItem = sale.items.find(i => i.productId === productId);
-                    return sum + (saleItem ? saleItem.quantity : 0);
-                }, 0);
+
+                if (isEmptyContainer) {
+                    // Para bidones vacíos: calcular entradas por ventas de recargas con devolución
+                    todaySales.forEach(sale => {
+                        if (sale.returnedContainers && sale.returnedContainers.total > 0) {
+                            sale.items.forEach(saleItem => {
+                                const saleProduct = db.products.find(p => p.id === saleItem.productId);
+                                if (saleProduct) {
+                                    const saleProductName = saleProduct.name.toUpperCase();
+                                    // Si se vendió una recarga BCL y este es BCL VACIO
+                                    if (isBclVacio && (saleProductName.includes('RECARGA BCL') || (saleProductName.includes('BCL') && !saleProductName.includes('VACIO')))) {
+                                        const returned = Math.min(saleItem.quantity, sale.returnedContainers.bcl || 0);
+                                        emptyContainersIn += returned;
+                                    }
+                                    // Si se vendió una recarga BSL y este es BSL VACIO
+                                    if (isBslVacio && (saleProductName.includes('RECARGA BSL') || (saleProductName.includes('BSL') && !saleProductName.includes('VACIO')))) {
+                                        const returned = Math.min(saleItem.quantity, sale.returnedContainers.bsl || 0);
+                                        emptyContainersIn += returned;
+                                    }
+                                }
+                            });
+                        }
+                    });
+
+                    // Para bidones vacíos: calcular salidas por compras de recargas
+                    if (purchasesSnapshot && purchasesSnapshot.docs) {
+                        purchasesSnapshot.docs.forEach(doc => {
+                            const expense = doc.data();
+                            if (expense.categoryName && expense.categoryName.toLowerCase().includes('compra de productos') && expense.productDetails) {
+                                expense.productDetails.forEach(purchaseItem => {
+                                    const purchaseProduct = db.products.find(p => p.id === purchaseItem.productId);
+                                    if (purchaseProduct) {
+                                        const purchaseProductName = purchaseProduct.name.toUpperCase();
+                                        // Si se compró recarga BCL y este es BCL VACIO
+                                        if (isBclVacio && purchaseProductName.includes('RECARGA BCL')) {
+                                            emptyContainersOut += purchaseItem.quantity;
+                                        }
+                                        // Si se compró recarga BSL y este es BSL VACIO
+                                        if (isBslVacio && purchaseProductName.includes('RECARGA BSL')) {
+                                            emptyContainersOut += purchaseItem.quantity;
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    }
+                } else {
+                    // Para productos normales: calcular ventas directas
+                    soldQty = todaySales.reduce((sum, sale) => {
+                        const saleItem = sale.items.find(i => i.productId === productId);
+                        return sum + (saleItem ? saleItem.quantity : 0);
+                    }, 0);
+                }
 
                 // 🧮 FÓRMULA COMPLETA: Inicial + Compras + Transferencias Entrantes - Ventas - Pérdidas - Transferencias Salientes
                 const comprasQty = purchasesByProduct[productId] || 0;
@@ -12671,10 +12728,17 @@
                 const transferenciasOutQty = transfersOutByProduct[productId] || 0;
                 const perdidasQty = lossesByProduct[productId] || 0;
 
-                const expectedQty = initialQty + comprasQty + transferenciasInQty - soldQty - perdidasQty - transferenciasOutQty;
+                // Para bidones vacíos: sumar entradas por ventas, restar salidas por compras
+                // Para productos normales: restar ventas directas
+                let expectedQty;
+                if (isEmptyContainer) {
+                    expectedQty = initialQty + comprasQty + transferenciasInQty + emptyContainersIn - emptyContainersOut - perdidasQty - transferenciasOutQty;
+                } else {
+                    expectedQty = initialQty + comprasQty + transferenciasInQty - soldQty - perdidasQty - transferenciasOutQty;
+                }
                 const difference = closingQty - expectedQty;
 
-                if (difference !== 0 || comprasQty > 0 || transferenciasInQty > 0 || transferenciasOutQty > 0 || perdidasQty > 0) {
+                if (difference !== 0 || comprasQty > 0 || transferenciasInQty > 0 || transferenciasOutQty > 0 || perdidasQty > 0 || emptyContainersIn > 0 || emptyContainersOut > 0) {
                     differences.push({
                         productName: product.name,
                         initial: initialQty,
@@ -12685,7 +12749,10 @@
                         perdidas: perdidasQty,
                         expected: expectedQty,
                         physical: closingQty,
-                        difference: difference
+                        difference: difference,
+                        isEmptyContainer: isEmptyContainer,
+                        emptyContainersIn: emptyContainersIn,
+                        emptyContainersOut: emptyContainersOut
                     });
                 }
             }
@@ -12718,7 +12785,12 @@
                             <div><strong>Físico:</strong> ${diff.physical}</div>
                             ${diff.compras > 0 ? `<div class="text-green-600 dark:text-green-400"><strong>+ Compras:</strong> ${diff.compras}</div>` : ''}
                             ${diff.transferenciasIn > 0 ? `<div class="text-blue-600 dark:text-blue-400"><strong>+ Transferencias Recibidas:</strong> ${diff.transferenciasIn}</div>` : ''}
-                            ${diff.sold > 0 ? `<div class="text-orange-600 dark:text-orange-400"><strong>- Vendidos:</strong> ${diff.sold}</div>` : ''}
+                            ${diff.isEmptyContainer ? (
+                                diff.emptyContainersIn > 0 ? `<div class="text-green-600 dark:text-green-400"><strong>+ Devoluciones por ventas:</strong> ${diff.emptyContainersIn}</div>` : ''
+                            ) : (
+                                diff.sold > 0 ? `<div class="text-orange-600 dark:text-orange-400"><strong>- Vendidos:</strong> ${diff.sold}</div>` : ''
+                            )}
+                            ${diff.isEmptyContainer && diff.emptyContainersOut > 0 ? `<div class="text-orange-600 dark:text-orange-400"><strong>- Usados en compras:</strong> ${diff.emptyContainersOut}</div>` : ''}
                             ${diff.perdidas > 0 ? `<div class="text-red-600 dark:text-red-400"><strong>- Pérdidas:</strong> ${diff.perdidas}</div>` : ''}
                             ${diff.transferenciasOut > 0 ? `<div class="text-purple-600 dark:text-purple-400"><strong>- Transferencias Enviadas:</strong> ${diff.transferenciasOut}</div>` : ''}
                             <div class="col-span-2 pt-1 border-t border-slate-200 dark:border-slate-600 font-bold text-slate-900 dark:text-white">
