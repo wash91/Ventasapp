@@ -1,5 +1,5 @@
 // Service Worker para funcionamiento offline
-const CACHE_NAME = 'ventas-v8-cors-fix';
+const CACHE_NAME = 'ventas-v9-sidebar-auto-close';
 const urlsToCache = [
   '/',
   '/index.html'
