@@ -1,5 +1,5 @@
 // Service Worker para funcionamiento offline
-const CACHE_NAME = 'ventas-v9-sidebar-auto-close';
+const CACHE_NAME = 'ventas-v10-emergency-fix';
 const urlsToCache = [
   '/',
   '/index.html'
