@@ -12595,9 +12595,16 @@
                 .where('date', '==', todayDate)
                 .get();
 
-            // 🔹 Consultar TRANSFERENCIAS APROBADAS recibidas por el vehículo actual
-            const transfersSnapshot = await db_firestore.collection('inventory_transfers')
+            // 🔹 Consultar TRANSFERENCIAS ENTRANTES (recibidas por el vehículo actual)
+            const transfersInSnapshot = await db_firestore.collection('inventory_transfers')
                 .where('toVehicleId', '==', db.cashRegister.vehicleId)
+                .where('status', '==', 'approved')
+                .where('date', '==', todayDate)
+                .get();
+
+            // 🔹 Consultar TRANSFERENCIAS SALIENTES (enviadas desde el vehículo actual)
+            const transfersOutSnapshot = await db_firestore.collection('inventory_transfers')
+                .where('fromVehicleId', '==', db.cashRegister.vehicleId)
                 .where('status', '==', 'approved')
                 .where('date', '==', todayDate)
                 .get();
@@ -12620,11 +12627,18 @@
                 }
             });
 
-            // Procesar transferencias recibidas por producto
-            const transfersByProduct = {};
-            transfersSnapshot.docs.forEach(doc => {
+            // Procesar transferencias ENTRANTES (recibidas) por producto
+            const transfersInByProduct = {};
+            transfersInSnapshot.docs.forEach(doc => {
                 const transfer = doc.data();
-                transfersByProduct[transfer.productId] = (transfersByProduct[transfer.productId] || 0) + transfer.quantity;
+                transfersInByProduct[transfer.productId] = (transfersInByProduct[transfer.productId] || 0) + transfer.quantity;
+            });
+
+            // Procesar transferencias SALIENTES (enviadas) por producto
+            const transfersOutByProduct = {};
+            transfersOutSnapshot.docs.forEach(doc => {
+                const transfer = doc.data();
+                transfersOutByProduct[transfer.productId] = (transfersOutByProduct[transfer.productId] || 0) + transfer.quantity;
             });
 
             // Procesar pérdidas por producto
@@ -12651,20 +12665,22 @@
                     return sum + (saleItem ? saleItem.quantity : 0);
                 }, 0);
 
-                // 🧮 FÓRMULA COMPLETA: Inicial + Compras + Transferencias - Ventas - Pérdidas
+                // 🧮 FÓRMULA COMPLETA: Inicial + Compras + Transferencias Entrantes - Ventas - Pérdidas - Transferencias Salientes
                 const comprasQty = purchasesByProduct[productId] || 0;
-                const transferenciasQty = transfersByProduct[productId] || 0;
+                const transferenciasInQty = transfersInByProduct[productId] || 0;
+                const transferenciasOutQty = transfersOutByProduct[productId] || 0;
                 const perdidasQty = lossesByProduct[productId] || 0;
 
-                const expectedQty = initialQty + comprasQty + transferenciasQty - soldQty - perdidasQty;
+                const expectedQty = initialQty + comprasQty + transferenciasInQty - soldQty - perdidasQty - transferenciasOutQty;
                 const difference = closingQty - expectedQty;
 
-                if (difference !== 0 || comprasQty > 0 || transferenciasQty > 0 || perdidasQty > 0) {
+                if (difference !== 0 || comprasQty > 0 || transferenciasInQty > 0 || transferenciasOutQty > 0 || perdidasQty > 0) {
                     differences.push({
                         productName: product.name,
                         initial: initialQty,
                         compras: comprasQty,
-                        transferencias: transferenciasQty,
+                        transferenciasIn: transferenciasInQty,
+                        transferenciasOut: transferenciasOutQty,
                         sold: soldQty,
                         perdidas: perdidasQty,
                         expected: expectedQty,
@@ -12701,9 +12717,10 @@
                             <div><strong>Inicial:</strong> ${diff.initial}</div>
                             <div><strong>Físico:</strong> ${diff.physical}</div>
                             ${diff.compras > 0 ? `<div class="text-green-600 dark:text-green-400"><strong>+ Compras:</strong> ${diff.compras}</div>` : ''}
-                            ${diff.transferencias > 0 ? `<div class="text-blue-600 dark:text-blue-400"><strong>+ Transferencias:</strong> ${diff.transferencias}</div>` : ''}
+                            ${diff.transferenciasIn > 0 ? `<div class="text-blue-600 dark:text-blue-400"><strong>+ Transferencias Recibidas:</strong> ${diff.transferenciasIn}</div>` : ''}
                             ${diff.sold > 0 ? `<div class="text-orange-600 dark:text-orange-400"><strong>- Vendidos:</strong> ${diff.sold}</div>` : ''}
                             ${diff.perdidas > 0 ? `<div class="text-red-600 dark:text-red-400"><strong>- Pérdidas:</strong> ${diff.perdidas}</div>` : ''}
+                            ${diff.transferenciasOut > 0 ? `<div class="text-purple-600 dark:text-purple-400"><strong>- Transferencias Enviadas:</strong> ${diff.transferenciasOut}</div>` : ''}
                             <div class="col-span-2 pt-1 border-t border-slate-200 dark:border-slate-600 font-bold text-slate-900 dark:text-white">
                                 <strong>Esperado:</strong> ${diff.expected}
                             </div>
