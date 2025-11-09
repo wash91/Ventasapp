@@ -12738,7 +12738,8 @@
                 }
                 const difference = closingQty - expectedQty;
 
-                if (difference !== 0 || comprasQty > 0 || transferenciasInQty > 0 || transferenciasOutQty > 0 || perdidasQty > 0 || emptyContainersIn > 0 || emptyContainersOut > 0) {
+                // Solo mostrar productos con diferencias reales (physical !== expected)
+                if (difference !== 0) {
                     differences.push({
                         productName: product.name,
                         initial: initialQty,
@@ -12764,9 +12765,24 @@
 
         // Mostrar diferencias
         if (differences.length === 0) {
-            differencesList.innerHTML = '<p class="text-green-600 dark:text-green-400 font-semibold">✅ No hay diferencias de inventario</p>';
+            differencesList.innerHTML = '<p class="text-green-600 dark:text-green-400 font-semibold text-center py-2">✅ No existen diferencias de inventario. Todos los productos coinciden con el inventario esperado.</p>';
             differencesSection.classList.remove('hidden');
+            differencesSection.classList.remove('bg-yellow-50', 'dark:bg-yellow-900/20', 'border-yellow-300', 'dark:border-yellow-700');
+            differencesSection.classList.add('bg-green-50', 'dark:bg-green-900/20', 'border-green-300', 'dark:border-green-700');
+            const diffTitle = differencesSection.querySelector('h4');
+            if (diffTitle) {
+                diffTitle.innerHTML = '✅ Inventario Verificado';
+                diffTitle.className = 'font-bold text-lg mb-3 text-green-900 dark:text-green-200';
+            }
         } else {
+            // Restaurar estilos de advertencia si hay diferencias
+            differencesSection.classList.remove('bg-green-50', 'dark:bg-green-900/20', 'border-green-300', 'dark:border-green-700');
+            differencesSection.classList.add('bg-yellow-50', 'dark:bg-yellow-900/20', 'border-yellow-300', 'dark:border-yellow-700');
+            const diffTitle = differencesSection.querySelector('h4');
+            if (diffTitle) {
+                diffTitle.innerHTML = '⚠️ Diferencias de Inventario';
+                diffTitle.className = 'font-bold text-lg mb-3 text-yellow-900 dark:text-yellow-200';
+            }
             differencesList.innerHTML = differences.map(diff => {
                 const diffClass = diff.difference > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400';
                 const diffSign = diff.difference > 0 ? '+' : '';
