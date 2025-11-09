@@ -1445,7 +1445,40 @@
         </div>
     </div>
 
-    <div id="cash-close-report-modal" class="modal-overlay hidden"><div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-lg w-full max-w-lg"><h2 class="text-2xl font-bold mb-4 text-center text-slate-900 dark:text-white">Reporte de Cierre de Caja</h2><div id="report-content" class="space-y-3 text-lg"><p><strong>Fecha de Cierre:</strong> <span id="report-date"></span></p><hr class="border-slate-200 dark:border-slate-600"><p><strong>(+) Monto Inicial:</strong> <span id="report-initial"></span></p><p><strong>(+) Ventas Efectivo:</strong> <span id="report-cash-sales"></span></p><p><strong>(+) Cobros:</strong> <span id="report-collections"></span></p><p><strong>(-) Gastos Efectivo:</strong> <span id="report-cash-expenses"></span></p><hr class="border-slate-200 dark:border-slate-600"><p><strong>(=) Total Esperado:</strong> <span id="report-total"></span></p><p><strong>Físico Contado:</strong> <span id="report-physical-cash"></span></p><hr class="border-slate-200 dark:border-slate-600"><p class="font-bold text-xl"><strong>Diferencia:</strong> <span id="report-difference"></span></p></div><div class="mt-6 flex justify-end space-x-4"><button onclick="document.getElementById('cash-close-report-modal').classList.add('hidden')" class="bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-200 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-500">Cerrar</button><button onclick="generateCloseCashPDF()" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700">Descargar PDF</button></div></div></div>
+    <div id="cash-close-report-modal" class="modal-overlay hidden">
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <h2 class="text-2xl font-bold mb-4 text-center text-slate-900 dark:text-white">Reporte de Cierre de Caja</h2>
+            <div id="report-content" class="space-y-3 text-lg">
+                <p><strong>Fecha de Cierre:</strong> <span id="report-date"></span></p>
+                <hr class="border-slate-200 dark:border-slate-600">
+                <p><strong>(+) Monto Inicial:</strong> <span id="report-initial"></span></p>
+                <p><strong>(+) Ventas Efectivo:</strong> <span id="report-cash-sales"></span></p>
+                <p><strong>(+) Cobros:</strong> <span id="report-collections"></span></p>
+                <p><strong>(-) Gastos Efectivo:</strong> <span id="report-cash-expenses"></span></p>
+                <hr class="border-slate-200 dark:border-slate-600">
+                <p><strong>(=) Total Esperado:</strong> <span id="report-total"></span></p>
+                <p><strong>Físico Contado:</strong> <span id="report-physical-cash"></span></p>
+                <hr class="border-slate-200 dark:border-slate-600">
+                <p class="font-bold text-xl"><strong>Diferencia:</strong> <span id="report-difference"></span></p>
+
+                <!-- Sección de Inventario Final -->
+                <hr class="border-slate-200 dark:border-slate-600">
+                <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border-2 border-blue-200 dark:border-blue-700">
+                    <h3 class="text-lg font-bold mb-3 text-slate-900 dark:text-white flex items-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                        Inventario Final del Vehículo
+                    </h3>
+                    <div id="report-inventory-container" class="space-y-2">
+                        <p class="text-sm text-slate-600 dark:text-slate-400 text-center py-2">No hay datos de inventario</p>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-4">
+                <button onclick="document.getElementById('cash-close-report-modal').classList.add('hidden')" class="bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-200 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-500">Cerrar</button>
+                <button onclick="generateCloseCashPDF()" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700">Descargar PDF</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal de Crear Cliente desde Ventas -->
     <div id="create-client-modal" class="modal-overlay hidden">
@@ -1713,7 +1746,7 @@
         }
     });
 
-    let db = { products: [], sales: [], expenses: [], collections: [], expenseTypes: [], clients: [], cashRegister: { isOpen: false, openingBalance: 0, transactions: [] }, usersMap: {} };
+    let db = { products: [], sales: [], expenses: [], collections: [], expenseTypes: [], clients: [], vehicleInventory: [], inventoryLosses: [], inventoryTransfers: [], cashRegister: { isOpen: false, openingBalance: 0, transactions: [] }, usersMap: {} };
     let currentSaleItems = [];
     let filteredAdminReportsData = {};
     
@@ -1953,6 +1986,19 @@
             renderClientsList();
             updateClientDropdown();
         }, error => console.error("Error en listener de clients:", error));
+
+        // Listeners para inventario
+        db_firestore.collection('vehicle_inventory').onSnapshot(snapshot => {
+            db.vehicleInventory = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+        }, error => console.error("Error en listener de vehicle_inventory:", error));
+
+        db_firestore.collection('inventory_losses').onSnapshot(snapshot => {
+            db.inventoryLosses = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+        }, error => console.error("Error en listener de inventory_losses:", error));
+
+        db_firestore.collection('inventory_transfers').onSnapshot(snapshot => {
+            db.inventoryTransfers = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+        }, error => console.error("Error en listener de inventory_transfers:", error));
     }
 
     // ===== GESTIÓN DE CLIENTES =====
@@ -3951,7 +3997,283 @@
             alert('Complete los campos obligatorios.');
         }
     });
-    
+
+    // ========== FUNCIÓN PARA CALCULAR INVENTARIO FINAL ==========
+    function calculateFinalInventory() {
+        const currentDate = getCurrentDate();
+        const currentUserId = auth.currentUser.uid;
+        const sessionId = db.cashRegister.sessionId;
+
+        // Obtener inventario inicial del vehículo/sesión
+        const initialInventory = {};
+        db.vehicleInventory
+            .filter(inv => inv.sessionId === sessionId || inv.sellerId === currentUserId)
+            .forEach(inv => {
+                if (!initialInventory[inv.productId]) {
+                    initialInventory[inv.productId] = {
+                        productId: inv.productId,
+                        productName: inv.productName || db.products.find(p => p.id === inv.productId)?.name || 'Producto',
+                        quantity: inv.quantity || 0
+                    };
+                } else {
+                    initialInventory[inv.productId].quantity += (inv.quantity || 0);
+                }
+            });
+
+        // Calcular cambios del día
+        const inventoryChanges = {};
+
+        // 1. COMPRAS - sumar productos comprados
+        db.expenses
+            .filter(e => e.date === currentDate && e.sellerId === currentUserId)
+            .forEach(expense => {
+                // Buscar si la categoría es "Compra de producto"
+                const expenseType = db.expenseTypes.find(et => et.id === expense.category || et.name === expense.category);
+                if (expenseType && (expenseType.name.toLowerCase().includes('compra') || expenseType.name.toLowerCase().includes('producto'))) {
+                    // Intentar extraer información del producto de las observaciones
+                    // Formato esperado en observaciones: "Producto: NombreProducto, Cantidad: X"
+                    if (expense.observations) {
+                        const productInfo = parseProductFromObservations(expense.observations);
+                        if (productInfo && productInfo.productId) {
+                            if (!inventoryChanges[productInfo.productId]) {
+                                inventoryChanges[productInfo.productId] = {
+                                    productId: productInfo.productId,
+                                    productName: productInfo.productName,
+                                    purchases: 0,
+                                    sales: 0,
+                                    losses: 0,
+                                    transfersIn: 0,
+                                    transfersOut: 0
+                                };
+                            }
+                            inventoryChanges[productInfo.productId].purchases += productInfo.quantity;
+                        }
+                    }
+                }
+            });
+
+        // 2. VENTAS - restar productos vendidos
+        db.sales
+            .filter(s => s.date === currentDate && s.sellerId === currentUserId)
+            .forEach(sale => {
+                if (sale.items && Array.isArray(sale.items)) {
+                    sale.items.forEach(item => {
+                        if (!inventoryChanges[item.productId]) {
+                            inventoryChanges[item.productId] = {
+                                productId: item.productId,
+                                productName: item.name,
+                                purchases: 0,
+                                sales: 0,
+                                losses: 0,
+                                transfersIn: 0,
+                                transfersOut: 0
+                            };
+                        }
+                        inventoryChanges[item.productId].sales += item.quantity;
+                    });
+                }
+            });
+
+        // 3. PÉRDIDAS - restar pérdidas y daños
+        db.inventoryLosses
+            .filter(loss => {
+                const lossDate = loss.date || (loss.createdAt && loss.createdAt.toDate ? loss.createdAt.toDate().toISOString().split('T')[0] : '');
+                return lossDate === currentDate && loss.sellerId === currentUserId;
+            })
+            .forEach(loss => {
+                if (loss.items && Array.isArray(loss.items)) {
+                    loss.items.forEach(item => {
+                        if (!inventoryChanges[item.productId]) {
+                            inventoryChanges[item.productId] = {
+                                productId: item.productId,
+                                productName: item.productName || item.name,
+                                purchases: 0,
+                                sales: 0,
+                                losses: 0,
+                                transfersIn: 0,
+                                transfersOut: 0
+                            };
+                        }
+                        inventoryChanges[item.productId].losses += item.quantity || 0;
+                    });
+                }
+            });
+
+        // 4. TRANSFERENCIAS RECIBIDAS - sumar transferencias entrantes
+        db.inventoryTransfers
+            .filter(transfer => {
+                const transferDate = transfer.date || (transfer.createdAt && transfer.createdAt.toDate ? transfer.createdAt.toDate().toISOString().split('T')[0] : '');
+                return transferDate === currentDate && transfer.toSellerId === currentUserId && (transfer.status === 'completed' || transfer.status === 'completada');
+            })
+            .forEach(transfer => {
+                if (transfer.items && Array.isArray(transfer.items)) {
+                    transfer.items.forEach(item => {
+                        if (!inventoryChanges[item.productId]) {
+                            inventoryChanges[item.productId] = {
+                                productId: item.productId,
+                                productName: item.productName || item.name,
+                                purchases: 0,
+                                sales: 0,
+                                losses: 0,
+                                transfersIn: 0,
+                                transfersOut: 0
+                            };
+                        }
+                        inventoryChanges[item.productId].transfersIn += item.quantity || 0;
+                    });
+                }
+            });
+
+        // 5. TRANSFERENCIAS ENVIADAS - restar transferencias salientes
+        db.inventoryTransfers
+            .filter(transfer => {
+                const transferDate = transfer.date || (transfer.createdAt && transfer.createdAt.toDate ? transfer.createdAt.toDate().toISOString().split('T')[0] : '');
+                return transferDate === currentDate && transfer.fromSellerId === currentUserId && (transfer.status === 'completed' || transfer.status === 'completada');
+            })
+            .forEach(transfer => {
+                if (transfer.items && Array.isArray(transfer.items)) {
+                    transfer.items.forEach(item => {
+                        if (!inventoryChanges[item.productId]) {
+                            inventoryChanges[item.productId] = {
+                                productId: item.productId,
+                                productName: item.productName || item.name,
+                                purchases: 0,
+                                sales: 0,
+                                losses: 0,
+                                transfersIn: 0,
+                                transfersOut: 0
+                            };
+                        }
+                        inventoryChanges[item.productId].transfersOut += item.quantity || 0;
+                    });
+                }
+            });
+
+        // Calcular inventario final combinando inicial + cambios
+        const finalInventory = {};
+
+        // Iniciar con inventario inicial
+        Object.keys(initialInventory).forEach(productId => {
+            finalInventory[productId] = {
+                productId,
+                productName: initialInventory[productId].productName,
+                initial: initialInventory[productId].quantity,
+                purchases: 0,
+                sales: 0,
+                losses: 0,
+                transfersIn: 0,
+                transfersOut: 0,
+                final: initialInventory[productId].quantity
+            };
+        });
+
+        // Aplicar cambios
+        Object.keys(inventoryChanges).forEach(productId => {
+            if (!finalInventory[productId]) {
+                finalInventory[productId] = {
+                    productId,
+                    productName: inventoryChanges[productId].productName,
+                    initial: 0,
+                    purchases: 0,
+                    sales: 0,
+                    losses: 0,
+                    transfersIn: 0,
+                    transfersOut: 0,
+                    final: 0
+                };
+            }
+
+            finalInventory[productId].purchases = inventoryChanges[productId].purchases;
+            finalInventory[productId].sales = inventoryChanges[productId].sales;
+            finalInventory[productId].losses = inventoryChanges[productId].losses;
+            finalInventory[productId].transfersIn = inventoryChanges[productId].transfersIn;
+            finalInventory[productId].transfersOut = inventoryChanges[productId].transfersOut;
+
+            // Calcular final: inicial + compras + transferencias entrantes - ventas - pérdidas - transferencias salientes
+            finalInventory[productId].final = finalInventory[productId].initial
+                + finalInventory[productId].purchases
+                + finalInventory[productId].transfersIn
+                - finalInventory[productId].sales
+                - finalInventory[productId].losses
+                - finalInventory[productId].transfersOut;
+        });
+
+        return Object.values(finalInventory);
+    }
+
+    // Función auxiliar para extraer información de producto de las observaciones de un gasto
+    function parseProductFromObservations(observations) {
+        // Intentar buscar el producto en db.products por nombre
+        const obsLower = observations.toLowerCase();
+
+        // Buscar patrón "producto: NombreProducto" o simplemente el nombre
+        for (const product of db.products) {
+            if (obsLower.includes(product.name.toLowerCase())) {
+                // Intentar extraer cantidad
+                const quantityMatch = observations.match(/cantidad[:\s]+(\d+)/i) || observations.match(/(\d+)\s*unidad/i) || observations.match(/(\d+)\s*ud/i);
+                const quantity = quantityMatch ? parseInt(quantityMatch[1]) : 1;
+
+                return {
+                    productId: product.id,
+                    productName: product.name,
+                    quantity
+                };
+            }
+        }
+
+        return null;
+    }
+
+    // Función para renderizar el inventario en el modal de reporte
+    function renderInventoryInReport(inventory) {
+        const container = document.getElementById('report-inventory-container');
+        if (!container) return;
+
+        if (!inventory || inventory.length === 0) {
+            container.innerHTML = '<p class="text-sm text-slate-600 dark:text-slate-400 text-center py-2">No hay datos de inventario disponibles</p>';
+            return;
+        }
+
+        let html = '<div class="overflow-x-auto"><table class="w-full text-sm border-collapse">';
+        html += '<thead class="bg-slate-100 dark:bg-slate-700">';
+        html += '<tr>';
+        html += '<th class="border border-slate-300 dark:border-slate-600 px-2 py-1 text-left">Producto</th>';
+        html += '<th class="border border-slate-300 dark:border-slate-600 px-2 py-1 text-center">Inicial</th>';
+        html += '<th class="border border-slate-300 dark:border-slate-600 px-2 py-1 text-center">+Compras</th>';
+        html += '<th class="border border-slate-300 dark:border-slate-600 px-2 py-1 text-center">+Trans.In</th>';
+        html += '<th class="border border-slate-300 dark:border-slate-600 px-2 py-1 text-center">-Ventas</th>';
+        html += '<th class="border border-slate-300 dark:border-slate-600 px-2 py-1 text-center">-Pérdidas</th>';
+        html += '<th class="border border-slate-300 dark:border-slate-600 px-2 py-1 text-center">-Trans.Out</th>';
+        html += '<th class="border border-slate-300 dark:border-slate-600 px-2 py-1 text-center font-bold">Final</th>';
+        html += '</tr>';
+        html += '</thead>';
+        html += '<tbody>';
+
+        inventory.forEach((item, index) => {
+            const rowClass = index % 2 === 0 ? 'bg-white dark:bg-slate-800' : 'bg-slate-50 dark:bg-slate-750';
+            const finalClass = item.final < 0 ? 'text-red-600 dark:text-red-400 font-bold' : 'text-slate-900 dark:text-white font-bold';
+
+            html += `<tr class="${rowClass}">`;
+            html += `<td class="border border-slate-300 dark:border-slate-600 px-2 py-1">${item.productName}</td>`;
+            html += `<td class="border border-slate-300 dark:border-slate-600 px-2 py-1 text-center">${item.initial}</td>`;
+            html += `<td class="border border-slate-300 dark:border-slate-600 px-2 py-1 text-center text-green-600 dark:text-green-400">${item.purchases > 0 ? '+' + item.purchases : '-'}</td>`;
+            html += `<td class="border border-slate-300 dark:border-slate-600 px-2 py-1 text-center text-green-600 dark:text-green-400">${item.transfersIn > 0 ? '+' + item.transfersIn : '-'}</td>`;
+            html += `<td class="border border-slate-300 dark:border-slate-600 px-2 py-1 text-center text-red-600 dark:text-red-400">${item.sales > 0 ? '-' + item.sales : '-'}</td>`;
+            html += `<td class="border border-slate-300 dark:border-slate-600 px-2 py-1 text-center text-orange-600 dark:text-orange-400">${item.losses > 0 ? '-' + item.losses : '-'}</td>`;
+            html += `<td class="border border-slate-300 dark:border-slate-600 px-2 py-1 text-center text-red-600 dark:text-red-400">${item.transfersOut > 0 ? '-' + item.transfersOut : '-'}</td>`;
+            html += `<td class="border border-slate-300 dark:border-slate-600 px-2 py-1 text-center ${finalClass}">${item.final}</td>`;
+            html += '</tr>';
+        });
+
+        html += '</tbody>';
+        html += '</table></div>';
+
+        // Agregar nota explicativa
+        html += '<p class="text-xs text-slate-500 dark:text-slate-400 mt-2 italic">* Fórmula: Final = Inicial + Compras + Trans.In - Ventas - Pérdidas - Trans.Out</p>';
+
+        container.innerHTML = html;
+    }
+
     async function closeCashRegister() {
         const physicalCash = parseFloat(document.getElementById('closure-physical-cash').value) || 0;
 
@@ -3999,6 +4321,9 @@
             document.getElementById('closure-difference').classList.add('text-green-800', 'dark:text-green-300');
         }
 
+        // Calcular inventario final
+        const finalInventory = calculateFinalInventory();
+
         // Confirmar el cierre
         const confirmMsg = `¿Confirmar cierre de caja?\n\nEfectivo Esperado: $${expectedCash.toFixed(2)}\nEfectivo Contado: $${physicalCash.toFixed(2)}\nDiferencia: $${difference.toFixed(2)}`;
 
@@ -4010,7 +4335,8 @@
             sellerId: auth.currentUser.uid,
             closeTimestamp: firebase.firestore.FieldValue.serverTimestamp(),
             openingBalance, cashSales, cashExpenses, collections, expectedCash, physicalCash, difference,
-            creditSales, transferSales, transactions
+            creditSales, transferSales, transactions,
+            inventory: finalInventory // Agregar inventario al cierre
         };
 
         try {
@@ -4039,6 +4365,9 @@
             const diffEl = document.getElementById('report-difference');
             diffEl.textContent = `${difference < 0 ? 'Faltante: ' : 'Sobrante: '}$${Math.abs(difference).toFixed(2)}`;
             diffEl.className = `font-bold text-xl ${difference < 0 ? 'text-red-500' : 'text-green-500'}`;
+
+            // Renderizar inventario final en el modal
+            renderInventoryInReport(finalInventory);
 
             document.getElementById('cash-close-report-modal').classList.remove('hidden');
 
@@ -4490,6 +4819,63 @@
                 doc.text('No se registraron ventas en este periodo', 14, currentY);
             }
 
+            // Sección de Inventario
+            const inventory = closure.inventory || [];
+
+            if (inventory.length > 0) {
+                currentY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : currentY + 10;
+
+                // Verificar si necesitamos una nueva página
+                if (currentY > 220) {
+                    doc.addPage();
+                    currentY = 20;
+                }
+
+                doc.setFontSize(14);
+                doc.setTextColor(22, 160, 133);
+                doc.text('Inventario Final del Vehiculo', 14, currentY);
+
+                const inventoryData = inventory.map(item => {
+                    return [
+                        item.productName,
+                        item.initial.toString(),
+                        item.purchases > 0 ? `+${item.purchases}` : '-',
+                        item.transfersIn > 0 ? `+${item.transfersIn}` : '-',
+                        item.sales > 0 ? `-${item.sales}` : '-',
+                        item.losses > 0 ? `-${item.losses}` : '-',
+                        item.transfersOut > 0 ? `-${item.transfersOut}` : '-',
+                        item.final.toString()
+                    ];
+                });
+
+                doc.autoTable({
+                    startY: currentY + 5,
+                    theme: 'grid',
+                    head: [['Producto', 'Inicial', '+Compras', '+Trans.In', '-Ventas', '-Perdidas', '-Trans.Out', 'Final']],
+                    body: inventoryData,
+                    styles: { fontSize: 7, cellPadding: 1.5 },
+                    headStyles: { fillColor: [22, 160, 133], fontSize: 7 },
+                    columnStyles: {
+                        0: { cellWidth: 50 },
+                        1: { cellWidth: 15, halign: 'center' },
+                        2: { cellWidth: 16, halign: 'center' },
+                        3: { cellWidth: 16, halign: 'center' },
+                        4: { cellWidth: 15, halign: 'center' },
+                        5: { cellWidth: 18, halign: 'center' },
+                        6: { cellWidth: 18, halign: 'center' },
+                        7: { cellWidth: 15, halign: 'center', fontStyle: 'bold' }
+                    },
+                    margin: { left: 14, right: 14 }
+                });
+
+                currentY = doc.lastAutoTable.finalY + 5;
+
+                // Nota explicativa
+                doc.setFontSize(8);
+                doc.setTextColor(100, 100, 100);
+                doc.text('* Formula: Final = Inicial + Compras + Trans.In - Ventas - Perdidas - Trans.Out', 14, currentY);
+            }
+
             // Footer
             const pageCount = doc.internal.getNumberOfPages();
             for (let i = 1; i <= pageCount; i++) {
@@ -4506,7 +4892,7 @@
             alert('Error al generar el PDF: ' + error.message);
         }
     }
-    
+
     async function queryAndDisplayAdminReports() {
         const displayArea = document.getElementById('admin-reports-display');
         displayArea.classList.remove('hidden');
@@ -4911,6 +5297,73 @@
             doc.setFontSize(11);
             doc.setTextColor(100, 100, 100);
             doc.text('No se registraron ventas en este periodo', 14, currentY);
+        }
+
+        // Obtener el inventario del cierre desde Firestore
+        const closureSnapshot = await db_firestore.collection('cash_closures')
+            .where('sellerId', '==', auth.currentUser.uid)
+            .orderBy('closeTimestamp', 'desc')
+            .limit(1)
+            .get();
+
+        if (!closureSnapshot.empty) {
+            const closureData = closureSnapshot.docs[0].data();
+            const inventory = closureData.inventory || [];
+
+            if (inventory.length > 0) {
+                currentY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : currentY + 10;
+
+                // Verificar si necesitamos una nueva página
+                if (currentY > 220) {
+                    doc.addPage();
+                    currentY = 20;
+                }
+
+                // Sección de Inventario
+                doc.setFontSize(14);
+                doc.setTextColor(22, 160, 133);
+                doc.text('Inventario Final del Vehiculo', 14, currentY);
+
+                const inventoryData = inventory.map(item => {
+                    return [
+                        item.productName,
+                        item.initial.toString(),
+                        item.purchases > 0 ? `+${item.purchases}` : '-',
+                        item.transfersIn > 0 ? `+${item.transfersIn}` : '-',
+                        item.sales > 0 ? `-${item.sales}` : '-',
+                        item.losses > 0 ? `-${item.losses}` : '-',
+                        item.transfersOut > 0 ? `-${item.transfersOut}` : '-',
+                        item.final.toString()
+                    ];
+                });
+
+                doc.autoTable({
+                    startY: currentY + 5,
+                    theme: 'grid',
+                    head: [['Producto', 'Inicial', '+Compras', '+Trans.In', '-Ventas', '-Perdidas', '-Trans.Out', 'Final']],
+                    body: inventoryData,
+                    styles: { fontSize: 7, cellPadding: 1.5 },
+                    headStyles: { fillColor: [22, 160, 133], fontSize: 7 },
+                    columnStyles: {
+                        0: { cellWidth: 50 },
+                        1: { cellWidth: 15, halign: 'center' },
+                        2: { cellWidth: 16, halign: 'center' },
+                        3: { cellWidth: 16, halign: 'center' },
+                        4: { cellWidth: 15, halign: 'center' },
+                        5: { cellWidth: 18, halign: 'center' },
+                        6: { cellWidth: 18, halign: 'center' },
+                        7: { cellWidth: 15, halign: 'center', fontStyle: 'bold' }
+                    },
+                    margin: { left: 14, right: 14 }
+                });
+
+                currentY = doc.lastAutoTable.finalY + 5;
+
+                // Nota explicativa
+                doc.setFontSize(8);
+                doc.setTextColor(100, 100, 100);
+                doc.text('* Formula: Final = Inicial + Compras + Trans.In - Ventas - Perdidas - Trans.Out', 14, currentY);
+            }
         }
 
         // Footer
