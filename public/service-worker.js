@@ -1,5 +1,5 @@
 // Service Worker para funcionamiento offline
-const CACHE_NAME = 'ventas-v12-fix-cierre-caja';
+const CACHE_NAME = 'ventas-v13-network-first';
 const urlsToCache = [
   '/',
   '/index.html'
@@ -41,42 +41,28 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  // ESTRATEGIA: Network First para index.html (siempre traer versión nueva)
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Retornar del cache si existe
-        if (response) {
-          // Intentar actualizar en segundo plano
-          fetch(event.request).then(fetchResponse => {
-            if (fetchResponse && fetchResponse.status === 200) {
-              caches.open(CACHE_NAME).then(cache => {
-                cache.put(event.request, fetchResponse.clone());
-              });
-            }
-          }).catch(() => {
-            // Falló la actualización, pero tenemos cache
-          });
-          return response;
-        }
-
-        // Si no está en cache, intentar obtener de red
-        return fetch(event.request).then(fetchResponse => {
-          // Verificar si es una respuesta válida
-          if (!fetchResponse || fetchResponse.status !== 200 || fetchResponse.type === 'error') {
-            return fetchResponse;
-          }
-
-          // Clonar la respuesta
+    fetch(event.request)
+      .then(fetchResponse => {
+        // Si la red responde correctamente, cachear y retornar
+        if (fetchResponse && fetchResponse.status === 200) {
           const responseToCache = fetchResponse.clone();
-
-          caches.open(CACHE_NAME)
-            .then(cache => {
-              cache.put(event.request, responseToCache);
-            });
-
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseToCache);
+          });
           return fetchResponse;
-        }).catch(() => {
-          // Si falla la red y no hay cache, retornar página offline
+        }
+        return fetchResponse;
+      })
+      .catch(() => {
+        // Si falla la red, intentar servir desde caché
+        return caches.match(event.request).then(cachedResponse => {
+          if (cachedResponse) {
+            console.log('Sirviendo desde caché (offline):', event.request.url);
+            return cachedResponse;
+          }
+          // Si no hay caché y es un documento, servir index.html
           if (event.request.destination === 'document') {
             return caches.match('/index.html');
           }
