@@ -9565,7 +9565,7 @@
         }, 500);
     }
 
-    function updateCashClosureSummary() {
+    async function updateCashClosureSummary() {
         const el = document.getElementById('closure-opening-balance');
         if (!el) return;
 
@@ -9590,7 +9590,26 @@
         const cashExpenses = todayExpenses.filter(e => e.paymentMethod === 'efectivo').reduce((sum, e) => sum + e.amount, 0);
         const collections = todayCollections.reduce((sum, c) => sum + c.amount, 0);
 
-        const expected = openingBalance + cashSales + collections - cashExpenses;
+        // Calcular abonos de créditos del día (cuentas por cobrar)
+        let creditPayments = 0;
+        const creditSalesToday = todaySales.filter(s => s.paymentMethod === 'credito');
+
+        try {
+            for (const sale of creditSalesToday) {
+                const paymentsSnapshot = await db_firestore.collection('sales').doc(sale.id).collection('payments').get();
+                const todayPayments = paymentsSnapshot.docs
+                    .filter(doc => doc.data().date === getCurrentDate())
+                    .reduce((sum, doc) => sum + doc.data().amount, 0);
+                creditPayments += todayPayments;
+            }
+        } catch (error) {
+            console.error('Error al calcular abonos de créditos:', error);
+        }
+
+        // Sumar cobros totales: ingresos adicionales + abonos de cuentas por cobrar
+        const totalCollections = collections + creditPayments;
+
+        const expected = openingBalance + cashSales + totalCollections - cashExpenses;
         const totalDay = cashSales + creditSales + transferSales;
 
         const totalItems = todaySales.reduce((sum, sale) => {
@@ -9612,7 +9631,7 @@
         // Actualizar UI de Cierre
         el.textContent = `$${openingBalance.toFixed(2)}`;
         document.getElementById('closure-cash-sales').textContent = `$${cashSales.toFixed(2)}`;
-        document.getElementById('closure-collections').textContent = `$${collections.toFixed(2)}`;
+        document.getElementById('closure-collections').textContent = `$${totalCollections.toFixed(2)}`;
         document.getElementById('closure-cash-expenses').textContent = `$${cashExpenses.toFixed(2)}`;
         document.getElementById('closure-expected-cash').textContent = `$${expected.toFixed(2)}`;
         document.getElementById('closure-credit-sales').textContent = `$${creditSales.toFixed(2)}`;
