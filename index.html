@@ -3923,7 +3923,10 @@
                 reason
             };
 
-            // Actualizar transacciones de caja
+            // Actualizar transacciones de caja en memoria local
+            db.cashRegister.transactions.push(collection);
+
+            // Guardar transacción en Firestore
             if (db.cashRegister.sessionId) {
                 await db_firestore.collection('cash_sessions').doc(db.cashRegister.sessionId).collection('transactions').add(collection);
             }
@@ -3931,6 +3934,7 @@
             // Actualizar UI inmediatamente
             e.target.reset();
             updateCollectionsModule();
+            updateCashClosureSummary();
 
             // Intentar guardar en Firestore
             try {
@@ -3977,6 +3981,10 @@
 
             // Actualizar transacciones de caja
             if(paymentMethod === 'efectivo') {
+                // Actualizar transacciones de caja en memoria local
+                db.cashRegister.transactions.push(expense);
+
+                // Guardar transacción en Firestore
                 if (db.cashRegister.sessionId) {
                     await db_firestore.collection('cash_sessions').doc(db.cashRegister.sessionId).collection('transactions').add(expense);
                 }
@@ -3984,6 +3992,7 @@
 
             // Actualizar UI inmediatamente
             updateExpensesModule();
+            updateCashClosureSummary();
             this.reset();
 
             // Intentar guardar en Firestore
