@@ -1,5 +1,5 @@
 // Service Worker para funcionamiento offline
-const CACHE_NAME = 'ventas-v18-network-first';
+const CACHE_NAME = 'ventas-v19-network-first';
 const urlsToCache = [
   '/',
   '/index.html'
