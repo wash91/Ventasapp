@@ -4448,13 +4448,41 @@
 
         // Si estamos creando, verificar si el cliente ya existe
         if (!isEditing) {
-            const existingClient = db.clients.find(c =>
-                c.name.toLowerCase() === name.toLowerCase() ||
-                (phone && c.phone === phone)
+            // Verificar si existe un cliente con el mismo número de teléfono
+            const existingClientWithPhone = db.clients.find(c => c.phone === phone);
+
+            if (existingClientWithPhone) {
+                // Mostrar diálogo de confirmación
+                const continuar = confirm(`⚠️ Este número ya está registrado para otro cliente:\n\nNombre: ${existingClientWithPhone.name}\nTeléfono: ${existingClientWithPhone.phone}\n\n¿Deseas continuar de todos modos?`);
+
+                if (!continuar) {
+                    // Usuario decidió NO continuar
+                    return;
+                }
+
+                // Usuario decidió SÍ continuar - Validar que el nombre sea diferente
+                if (name.toLowerCase() === existingClientWithPhone.name.toLowerCase()) {
+                    alert(`❌ No puedes usar el mismo nombre para dos clientes con el mismo número.\n\nPor favor, agrega un distintivo al nombre para diferenciarlos:\n\nEjemplos:\n• ${name} - Casa\n• ${name} - Trabajo\n• ${name} - Oficina\n• ${name} - Local 1\n• ${name} - Negocio`);
+                    return;
+                }
+
+                // Validar que el nuevo nombre no sea solo el nombre anterior con espacios
+                const nameWithoutSpaces = name.replace(/\s+/g, ' ').trim().toLowerCase();
+                const existingNameWithoutSpaces = existingClientWithPhone.name.replace(/\s+/g, ' ').trim().toLowerCase();
+
+                if (nameWithoutSpaces === existingNameWithoutSpaces) {
+                    alert(`❌ El nombre debe ser diferente.\n\nPor favor, agrega un distintivo claro:\n\nEjemplos:\n• ${existingClientWithPhone.name} - Casa\n• ${existingClientWithPhone.name} - Trabajo\n• ${existingClientWithPhone.name} - Oficina`);
+                    return;
+                }
+            }
+
+            // Verificar si existe un cliente con el mismo nombre (pero diferente teléfono)
+            const existingClientWithName = db.clients.find(c =>
+                c.name.toLowerCase() === name.toLowerCase() && c.phone !== phone
             );
 
-            if (existingClient) {
-                alert(`⚠️ Ya existe un cliente con ese nombre o teléfono.\n\nNombre: ${existingClient.name}\nTeléfono: ${existingClient.phone || 'Sin teléfono'}`);
+            if (existingClientWithName) {
+                alert(`⚠️ Ya existe un cliente con ese nombre pero con diferente teléfono.\n\nNombre: ${existingClientWithName.name}\nTeléfono: ${existingClientWithName.phone || 'Sin teléfono'}\n\nPor favor, usa un nombre diferente o verifica los datos.`);
                 return;
             }
         }
@@ -9126,24 +9154,41 @@
                 }
 
                 try {
-                    // Verificar si el cliente ya existe
-                    const existingClient = db.clients.find(c =>
-                        c.name.toLowerCase() === name.toLowerCase() ||
-                        (phone && c.phone === phone)
+                    // Verificar si existe un cliente con el mismo número de teléfono
+                    const existingClientWithPhone = db.clients.find(c => c.phone === phone);
+
+                    if (existingClientWithPhone) {
+                        // Mostrar diálogo de confirmación
+                        const continuar = confirm(`⚠️ Este número ya está registrado para otro cliente:\n\nNombre: ${existingClientWithPhone.name}\nTeléfono: ${existingClientWithPhone.phone}\n\n¿Deseas continuar de todos modos?`);
+
+                        if (!continuar) {
+                            // Usuario decidió NO continuar
+                            return;
+                        }
+
+                        // Usuario decidió SÍ continuar - Validar que el nombre sea diferente
+                        if (name.toLowerCase() === existingClientWithPhone.name.toLowerCase()) {
+                            alert(`❌ No puedes usar el mismo nombre para dos clientes con el mismo número.\n\nPor favor, agrega un distintivo al nombre para diferenciarlos:\n\nEjemplos:\n• ${name} - Casa\n• ${name} - Trabajo\n• ${name} - Oficina\n• ${name} - Local 1\n• ${name} - Negocio`);
+                            return;
+                        }
+
+                        // Validar que el nuevo nombre no sea solo el nombre anterior con espacios
+                        const nameWithoutSpaces = name.replace(/\s+/g, ' ').trim().toLowerCase();
+                        const existingNameWithoutSpaces = existingClientWithPhone.name.replace(/\s+/g, ' ').trim().toLowerCase();
+
+                        if (nameWithoutSpaces === existingNameWithoutSpaces) {
+                            alert(`❌ El nombre debe ser diferente.\n\nPor favor, agrega un distintivo claro:\n\nEjemplos:\n• ${existingClientWithPhone.name} - Casa\n• ${existingClientWithPhone.name} - Trabajo\n• ${existingClientWithPhone.name} - Oficina`);
+                            return;
+                        }
+                    }
+
+                    // Verificar si existe un cliente con el mismo nombre (pero diferente teléfono)
+                    const existingClientWithName = db.clients.find(c =>
+                        c.name.toLowerCase() === name.toLowerCase() && c.phone !== phone
                     );
 
-                    if (existingClient) {
-                        alert(`⚠️ Ya existe un cliente con ese nombre o teléfono.\n\nNombre: ${existingClient.name}\nTeléfono: ${existingClient.phone || 'Sin teléfono'}\n\nSe seleccionará el cliente existente.`);
-
-                        // Usar el cliente existente
-                        selectedClientData = existingClient;
-                        const clientInput = document.getElementById('client-name');
-                        const displayName = existingClient.type === 'negocio' && existingClient.businessName ? existingClient.businessName : existingClient.name;
-                        clientInput.value = displayName;
-
-                        // Cerrar modal
-                        document.getElementById('create-client-modal').classList.add('hidden');
-                        modalForm.reset();
+                    if (existingClientWithName) {
+                        alert(`⚠️ Ya existe un cliente con ese nombre pero con diferente teléfono.\n\nNombre: ${existingClientWithName.name}\nTeléfono: ${existingClientWithName.phone || 'Sin teléfono'}\n\nPor favor, usa un nombre diferente o verifica los datos.`);
                         return;
                     }
 
