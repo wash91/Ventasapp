@@ -1,5 +1,5 @@
 // Service Worker para funcionamiento offline
-const CACHE_NAME = 'ventas-v21-tailwind-fix';
+const CACHE_NAME = 'ventas-v22-sync-fix';
 const urlsToCache = [
   '/',
   '/index.html'

@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Ventas y Administración</title>
-    <!-- Tailwind CSS - CDN Oficial -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://unpkg.com/tailwindcss-cdn@3.4.1/tailwindcss.js"></script>
     <!-- Bibliotecas para PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js" crossorigin="anonymous"></script>
@@ -1789,13 +1789,13 @@
                                         </div>
 
                                         <div id="business-name-field" class="hidden">
-                                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Nombre del Negocio</label>
+                                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Nombre del Negocio *</label>
                                             <input type="text" id="client-business-name" placeholder="Ej: Tienda La Esperanza" class="w-full p-3 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600">
                                         </div>
 
                                         <div>
-                                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Teléfono</label>
-                                            <input type="tel" id="client-phone" placeholder="Ej: 0999999999" class="w-full p-3 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600">
+                                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Teléfono *</label>
+                                            <input type="tel" id="client-phone" placeholder="Ej: 0999999999" required class="w-full p-3 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600">
                                         </div>
                                     </div>
 
@@ -1811,33 +1811,33 @@
                                                 </select>
                                             </div>
                                             <div>
-                                                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Cantón</label>
-                                                <input type="text" id="client-canton" placeholder="Cantón" class="w-full p-3 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:border-slate-600">
+                                                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Cantón *</label>
+                                                <input type="text" id="client-canton" placeholder="Cantón" required class="w-full p-3 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:border-slate-600">
                                             </div>
                                         </div>
 
                                         <div class="grid grid-cols-2 gap-3">
                                             <div>
-                                                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Parroquia</label>
-                                                <input type="text" id="client-parish" placeholder="Parroquia" class="w-full p-3 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:border-slate-600">
+                                                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Parroquia *</label>
+                                                <input type="text" id="client-parish" placeholder="Parroquia" required class="w-full p-3 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:border-slate-600">
                                             </div>
                                             <div>
-                                                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Sector/Barrio</label>
-                                                <input type="text" id="client-sector" placeholder="Sector o barrio" class="w-full p-3 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:border-slate-600">
+                                                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Sector/Barrio *</label>
+                                                <input type="text" id="client-sector" placeholder="Sector o barrio" required class="w-full p-3 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:border-slate-600">
                                             </div>
                                         </div>
 
                                         <div>
-                                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Dirección Completa</label>
-                                            <textarea id="client-address" placeholder="Calle principal, número, referencias..." rows="2" class="w-full p-3 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600"></textarea>
+                                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Dirección Completa *</label>
+                                            <textarea id="client-address" placeholder="Calle principal, número, referencias..." rows="2" required class="w-full p-3 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600"></textarea>
                                         </div>
 
                                         <!-- Ubicación GPS -->
                                         <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
-                                            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-2">Coordenadas GPS</label>
+                                            <label class="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-2">Coordenadas GPS *</label>
                                             <div class="flex gap-2 mb-2">
-                                                <input type="text" id="client-latitude" placeholder="Latitud" readonly class="flex-1 p-2 border rounded-lg bg-slate-100 dark:bg-slate-700 dark:border-slate-600 text-sm">
-                                                <input type="text" id="client-longitude" placeholder="Longitud" readonly class="flex-1 p-2 border rounded-lg bg-slate-100 dark:bg-slate-700 dark:border-slate-600 text-sm">
+                                                <input type="text" id="client-latitude" placeholder="Latitud" readonly required class="flex-1 p-2 border rounded-lg bg-slate-100 dark:bg-slate-700 dark:border-slate-600 text-sm">
+                                                <input type="text" id="client-longitude" placeholder="Longitud" readonly required class="flex-1 p-2 border rounded-lg bg-slate-100 dark:bg-slate-700 dark:border-slate-600 text-sm">
                                             </div>
                                             <button type="button" onclick="getClientLocation()" class="w-full bg-blue-600 text-white font-semibold py-2 px-3 rounded-lg text-sm">
                                                 📍 Capturar Ubicación GPS
@@ -1893,9 +1893,9 @@
 
                                         <div class="grid grid-cols-2 gap-3">
                                             <div>
-                                                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Horario</label>
-                                                <select id="client-visit-time" class="w-full p-3 border-2 rounded-lg mt-1 dark:bg-slate-700 dark:border-slate-600">
-                                                    <option value="">Sin preferencia</option>
+                                                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Horario *</label>
+                                                <select id="client-visit-time" required class="w-full p-3 border-2 rounded-lg mt-1 dark:bg-slate-700 dark:border-slate-600">
+                                                    <option value="">Seleccione...</option>
                                                     <option value="mañana">🌅 Mañana (8:00-12:00)</option>
                                                     <option value="tarde">☀️ Tarde (12:00-18:00)</option>
                                                     <option value="noche">🌙 Noche (18:00-21:00)</option>
@@ -1918,8 +1918,8 @@
                                         <h3 class="text-sm font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide">📝 Información Adicional</h3>
 
                                         <div>
-                                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Notas y Observaciones</label>
-                                            <textarea id="client-notes" placeholder="Preferencias, alertas especiales, etc..." rows="3" class="w-full p-3 border-2 rounded-lg mt-1 dark:bg-slate-700 dark:border-slate-600"></textarea>
+                                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Notas y Observaciones *</label>
+                                            <textarea id="client-notes" placeholder="Preferencias, alertas especiales, etc..." rows="3" required class="w-full p-3 border-2 rounded-lg mt-1 dark:bg-slate-700 dark:border-slate-600"></textarea>
                                         </div>
                                     </div>
 
@@ -3258,13 +3258,13 @@
                         </div>
 
                         <div id="modal-business-name-field" class="hidden">
-                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Nombre del Negocio</label>
+                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Nombre del Negocio *</label>
                             <input type="text" id="modal-client-business-name" placeholder="Ej: Tienda La Esperanza" class="w-full p-2.5 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600">
                         </div>
 
                         <div>
-                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Teléfono</label>
-                            <input type="tel" id="modal-client-phone" placeholder="0999999999" class="w-full p-2.5 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600">
+                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Teléfono *</label>
+                            <input type="tel" id="modal-client-phone" placeholder="0999999999" required class="w-full p-2.5 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600">
                         </div>
                     </div>
                 </div>
@@ -3284,34 +3284,34 @@
                         </div>
 
                         <div>
-                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Cantón</label>
-                            <input type="text" id="modal-client-canton" placeholder="Ej: Quito" class="w-full p-2.5 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600">
+                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Cantón *</label>
+                            <input type="text" id="modal-client-canton" placeholder="Ej: Quito" required class="w-full p-2.5 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600">
                         </div>
 
                         <div>
-                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Parroquia</label>
-                            <input type="text" id="modal-client-parish" placeholder="Ej: Chillogallo" class="w-full p-2.5 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600">
+                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Parroquia *</label>
+                            <input type="text" id="modal-client-parish" placeholder="Ej: Chillogallo" required class="w-full p-2.5 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600">
                         </div>
 
                         <div>
-                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Sector/Barrio</label>
-                            <input type="text" id="modal-client-sector" placeholder="Ej: Centro Histórico" class="w-full p-2.5 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600">
+                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Sector/Barrio *</label>
+                            <input type="text" id="modal-client-sector" placeholder="Ej: Centro Histórico" required class="w-full p-2.5 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600">
                         </div>
                     </div>
 
                     <div>
-                        <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Dirección Completa</label>
-                        <textarea id="modal-client-address" rows="2" placeholder="Calle principal, número, referencias..." class="w-full p-2.5 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600"></textarea>
+                        <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Dirección Completa *</label>
+                        <textarea id="modal-client-address" rows="2" placeholder="Calle principal, número, referencias..." required class="w-full p-2.5 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600"></textarea>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Latitud (GPS)</label>
-                            <input type="number" id="modal-client-latitude" step="0.000001" placeholder="-0.180653" class="w-full p-2.5 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600">
+                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Latitud (GPS) *</label>
+                            <input type="number" id="modal-client-latitude" step="0.000001" placeholder="-0.180653" required class="w-full p-2.5 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600">
                         </div>
                         <div>
-                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Longitud (GPS)</label>
-                            <input type="number" id="modal-client-longitude" step="0.000001" placeholder="-78.467834" class="w-full p-2.5 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600">
+                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Longitud (GPS) *</label>
+                            <input type="number" id="modal-client-longitude" step="0.000001" placeholder="-78.467834" required class="w-full p-2.5 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600">
                         </div>
                     </div>
 
@@ -3373,9 +3373,9 @@
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Horario</label>
-                            <select id="modal-client-visit-time" class="w-full p-2.5 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600">
-                                <option value="">Sin preferencia</option>
+                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Horario *</label>
+                            <select id="modal-client-visit-time" required class="w-full p-2.5 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600">
+                                <option value="">Seleccione...</option>
                                 <option value="mañana">🌅 Mañana (8:00-12:00)</option>
                                 <option value="tarde">☀️ Tarde (12:00-18:00)</option>
                                 <option value="noche">🌙 Noche (18:00-21:00)</option>
@@ -4376,13 +4376,69 @@
         // Notas
         const notes = document.getElementById('client-notes').value.trim();
 
+        // Validaciones obligatorias
         if (!name) {
             alert('El nombre del cliente es obligatorio');
             return;
         }
 
+        if (type === 'negocio' && !businessName) {
+            alert('El nombre del negocio es obligatorio');
+            return;
+        }
+
+        if (!phone) {
+            alert('El teléfono es obligatorio');
+            return;
+        }
+
         if (!province) {
             alert('La provincia es obligatoria');
+            return;
+        }
+
+        if (!canton) {
+            alert('El cantón es obligatorio');
+            return;
+        }
+
+        if (!parish) {
+            alert('La parroquia es obligatoria');
+            return;
+        }
+
+        if (!sector) {
+            alert('El sector/barrio es obligatorio');
+            return;
+        }
+
+        if (!address) {
+            alert('La dirección completa es obligatoria');
+            return;
+        }
+
+        if (!latitude || !longitude) {
+            alert('Las coordenadas GPS son obligatorias. Por favor, captura tu ubicación GPS.');
+            return;
+        }
+
+        if (defaultProducts.length === 0) {
+            alert('Debes seleccionar al menos un producto predeterminado');
+            return;
+        }
+
+        if (visitDays.length === 0) {
+            alert('Debes seleccionar al menos un día de visita');
+            return;
+        }
+
+        if (!visitTime) {
+            alert('El horario de visita es obligatorio');
+            return;
+        }
+
+        if (!notes) {
+            alert('Las notas y observaciones son obligatorias');
             return;
         }
 
@@ -4392,13 +4448,41 @@
 
         // Si estamos creando, verificar si el cliente ya existe
         if (!isEditing) {
-            const existingClient = db.clients.find(c =>
-                c.name.toLowerCase() === name.toLowerCase() ||
-                (phone && c.phone === phone)
+            // Verificar si existe un cliente con el mismo número de teléfono
+            const existingClientWithPhone = db.clients.find(c => c.phone === phone);
+
+            if (existingClientWithPhone) {
+                // Mostrar diálogo de confirmación
+                const continuar = confirm(`⚠️ Este número ya está registrado para otro cliente:\n\nNombre: ${existingClientWithPhone.name}\nTeléfono: ${existingClientWithPhone.phone}\n\n¿Deseas continuar de todos modos?`);
+
+                if (!continuar) {
+                    // Usuario decidió NO continuar
+                    return;
+                }
+
+                // Usuario decidió SÍ continuar - Validar que el nombre sea diferente
+                if (name.toLowerCase() === existingClientWithPhone.name.toLowerCase()) {
+                    alert(`❌ No puedes usar el mismo nombre para dos clientes con el mismo número.\n\nPor favor, agrega un distintivo al nombre para diferenciarlos:\n\nEjemplos:\n• ${name} - Casa\n• ${name} - Trabajo\n• ${name} - Oficina\n• ${name} - Local 1\n• ${name} - Negocio`);
+                    return;
+                }
+
+                // Validar que el nuevo nombre no sea solo el nombre anterior con espacios
+                const nameWithoutSpaces = name.replace(/\s+/g, ' ').trim().toLowerCase();
+                const existingNameWithoutSpaces = existingClientWithPhone.name.replace(/\s+/g, ' ').trim().toLowerCase();
+
+                if (nameWithoutSpaces === existingNameWithoutSpaces) {
+                    alert(`❌ El nombre debe ser diferente.\n\nPor favor, agrega un distintivo claro:\n\nEjemplos:\n• ${existingClientWithPhone.name} - Casa\n• ${existingClientWithPhone.name} - Trabajo\n• ${existingClientWithPhone.name} - Oficina`);
+                    return;
+                }
+            }
+
+            // Verificar si existe un cliente con el mismo nombre (pero diferente teléfono)
+            const existingClientWithName = db.clients.find(c =>
+                c.name.toLowerCase() === name.toLowerCase() && c.phone !== phone
             );
 
-            if (existingClient) {
-                alert(`⚠️ Ya existe un cliente con ese nombre o teléfono.\n\nNombre: ${existingClient.name}\nTeléfono: ${existingClient.phone || 'Sin teléfono'}`);
+            if (existingClientWithName) {
+                alert(`⚠️ Ya existe un cliente con ese nombre pero con diferente teléfono.\n\nNombre: ${existingClientWithName.name}\nTeléfono: ${existingClientWithName.phone || 'Sin teléfono'}\n\nPor favor, usa un nombre diferente o verifica los datos.`);
                 return;
             }
         }
@@ -8947,16 +9031,37 @@
         );
     }
 
+    // Listener para mostrar/ocultar campo de nombre de negocio en el formulario principal
+    document.addEventListener('DOMContentLoaded', () => {
+        const clientTypeSelector = document.getElementById('client-form-type-selector');
+        if (clientTypeSelector) {
+            clientTypeSelector.addEventListener('change', (e) => {
+                const businessField = document.getElementById('business-name-field');
+                const businessNameInput = document.getElementById('client-business-name');
+                if (e.target.value === 'negocio') {
+                    businessField.classList.remove('hidden');
+                    businessNameInput.setAttribute('required', 'required');
+                } else {
+                    businessField.classList.add('hidden');
+                    businessNameInput.removeAttribute('required');
+                }
+            });
+        }
+    });
+
     // Listener para mostrar/ocultar campo de nombre de negocio en el modal
     document.addEventListener('DOMContentLoaded', () => {
         const modalTypeSelector = document.getElementById('modal-client-type-selector');
         if (modalTypeSelector) {
             modalTypeSelector.addEventListener('change', (e) => {
                 const businessField = document.getElementById('modal-business-name-field');
+                const businessNameInput = document.getElementById('modal-client-business-name');
                 if (e.target.value === 'negocio') {
                     businessField.classList.remove('hidden');
+                    businessNameInput.setAttribute('required', 'required');
                 } else {
                     businessField.classList.add('hidden');
+                    businessNameInput.removeAttribute('required');
                 }
             });
         }
@@ -8987,25 +9092,103 @@
                 // Obtener productos predeterminados seleccionados
                 const defaultProducts = Array.from(document.querySelectorAll('input[name="modal-default-product"]:checked')).map(cb => cb.value);
 
+                // Validaciones obligatorias
+                if (!name) {
+                    alert('El nombre del cliente es obligatorio');
+                    return;
+                }
+
+                if (type === 'negocio' && !businessName) {
+                    alert('El nombre del negocio es obligatorio');
+                    return;
+                }
+
+                if (!phone) {
+                    alert('El teléfono es obligatorio');
+                    return;
+                }
+
+                if (!province) {
+                    alert('La provincia es obligatoria');
+                    return;
+                }
+
+                if (!canton) {
+                    alert('El cantón es obligatorio');
+                    return;
+                }
+
+                if (!parish) {
+                    alert('La parroquia es obligatoria');
+                    return;
+                }
+
+                if (!sector) {
+                    alert('El sector/barrio es obligatorio');
+                    return;
+                }
+
+                if (!address) {
+                    alert('La dirección completa es obligatoria');
+                    return;
+                }
+
+                if (!latitude || !longitude) {
+                    alert('Las coordenadas GPS son obligatorias. Por favor, captura tu ubicación GPS.');
+                    return;
+                }
+
+                if (defaultProducts.length === 0) {
+                    alert('Debes seleccionar al menos un producto predeterminado');
+                    return;
+                }
+
+                if (visitDays.length === 0) {
+                    alert('Debes seleccionar al menos un día de visita');
+                    return;
+                }
+
+                if (!visitTime) {
+                    alert('El horario de visita es obligatorio');
+                    return;
+                }
+
                 try {
-                    // Verificar si el cliente ya existe
-                    const existingClient = db.clients.find(c =>
-                        c.name.toLowerCase() === name.toLowerCase() ||
-                        (phone && c.phone === phone)
+                    // Verificar si existe un cliente con el mismo número de teléfono
+                    const existingClientWithPhone = db.clients.find(c => c.phone === phone);
+
+                    if (existingClientWithPhone) {
+                        // Mostrar diálogo de confirmación
+                        const continuar = confirm(`⚠️ Este número ya está registrado para otro cliente:\n\nNombre: ${existingClientWithPhone.name}\nTeléfono: ${existingClientWithPhone.phone}\n\n¿Deseas continuar de todos modos?`);
+
+                        if (!continuar) {
+                            // Usuario decidió NO continuar
+                            return;
+                        }
+
+                        // Usuario decidió SÍ continuar - Validar que el nombre sea diferente
+                        if (name.toLowerCase() === existingClientWithPhone.name.toLowerCase()) {
+                            alert(`❌ No puedes usar el mismo nombre para dos clientes con el mismo número.\n\nPor favor, agrega un distintivo al nombre para diferenciarlos:\n\nEjemplos:\n• ${name} - Casa\n• ${name} - Trabajo\n• ${name} - Oficina\n• ${name} - Local 1\n• ${name} - Negocio`);
+                            return;
+                        }
+
+                        // Validar que el nuevo nombre no sea solo el nombre anterior con espacios
+                        const nameWithoutSpaces = name.replace(/\s+/g, ' ').trim().toLowerCase();
+                        const existingNameWithoutSpaces = existingClientWithPhone.name.replace(/\s+/g, ' ').trim().toLowerCase();
+
+                        if (nameWithoutSpaces === existingNameWithoutSpaces) {
+                            alert(`❌ El nombre debe ser diferente.\n\nPor favor, agrega un distintivo claro:\n\nEjemplos:\n• ${existingClientWithPhone.name} - Casa\n• ${existingClientWithPhone.name} - Trabajo\n• ${existingClientWithPhone.name} - Oficina`);
+                            return;
+                        }
+                    }
+
+                    // Verificar si existe un cliente con el mismo nombre (pero diferente teléfono)
+                    const existingClientWithName = db.clients.find(c =>
+                        c.name.toLowerCase() === name.toLowerCase() && c.phone !== phone
                     );
 
-                    if (existingClient) {
-                        alert(`⚠️ Ya existe un cliente con ese nombre o teléfono.\n\nNombre: ${existingClient.name}\nTeléfono: ${existingClient.phone || 'Sin teléfono'}\n\nSe seleccionará el cliente existente.`);
-
-                        // Usar el cliente existente
-                        selectedClientData = existingClient;
-                        const clientInput = document.getElementById('client-name');
-                        const displayName = existingClient.type === 'negocio' && existingClient.businessName ? existingClient.businessName : existingClient.name;
-                        clientInput.value = displayName;
-
-                        // Cerrar modal
-                        document.getElementById('create-client-modal').classList.add('hidden');
-                        modalForm.reset();
+                    if (existingClientWithName) {
+                        alert(`⚠️ Ya existe un cliente con ese nombre pero con diferente teléfono.\n\nNombre: ${existingClientWithName.name}\nTeléfono: ${existingClientWithName.phone || 'Sin teléfono'}\n\nPor favor, usa un nombre diferente o verifica los datos.`);
                         return;
                     }
 
