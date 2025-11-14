@@ -5433,7 +5433,7 @@
 
         // Obtener TODAS las ventas del día
         const todaySales = db.sales.filter(s => s.date === getCurrentDate() && s.sellerId === auth.currentUser.uid);
-        const expensesInSession = db.cashRegister.transactions.filter(t => t.type === 'expense');
+        const expensesInSession = db.expenses.filter(e => e.date === getCurrentDate() && e.sellerId === auth.currentUser.uid);
 
         // Calcular totales
         const totalSales = todaySales.reduce((sum, s) => sum + s.total, 0);
