@@ -820,8 +820,8 @@
 
                                     <!-- Teléfono -->
                                     <div>
-                                        <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Teléfono</label>
-                                        <input type="tel" id="client-phone" placeholder="Ej: +505 8888-8888" class="w-full p-3 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600">
+                                        <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Teléfono <span class="text-red-500">*</span></label>
+                                        <input type="tel" id="client-phone" placeholder="Ej: +505 8888-8888" required class="w-full p-3 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600">
                                     </div>
 
                                     <!-- Dirección -->
@@ -1518,8 +1518,8 @@
 
                 <!-- Teléfono -->
                 <div>
-                    <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Teléfono</label>
-                    <input type="tel" id="modal-client-phone" placeholder="Ej: +505 8888-8888" class="w-full p-3 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600">
+                    <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Teléfono <span class="text-red-500">*</span></label>
+                    <input type="tel" id="modal-client-phone" placeholder="Ej: +505 8888-8888" required class="w-full p-3 border-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:border-slate-600">
                 </div>
 
                 <!-- Dirección -->
@@ -2056,15 +2056,33 @@
             return;
         }
 
-        // Verificar si el cliente ya existe (por nombre y teléfono)
-        const existingClient = db.clients.find(c =>
-            c.name.toLowerCase() === name.toLowerCase() ||
-            (phone && c.phone === phone)
-        );
-
-        if (existingClient) {
-            alert(`⚠️ Ya existe un cliente con ese nombre o teléfono.\n\nNombre: ${existingClient.name}\nTeléfono: ${existingClient.phone || 'Sin teléfono'}`);
+        if (!phone) {
+            alert('El número de celular es obligatorio');
             return;
+        }
+
+        // Verificar si ya existe un cliente con ese número de teléfono
+        const existingClientByPhone = db.clients.find(c => c.phone === phone);
+
+        if (existingClientByPhone) {
+            // Preguntar si desea continuar
+            const continuar = confirm(`⚠️ Este número ya está registrado para otro cliente:\n\nNombre: ${existingClientByPhone.name}\nTeléfono: ${existingClientByPhone.phone}\n\n¿Deseas continuar de todas formas?`);
+
+            if (!continuar) {
+                return; // El usuario canceló
+            }
+
+            // Si continúa, verificar que el nombre sea diferente y tenga un distintivo
+            if (name.toLowerCase() === existingClientByPhone.name.toLowerCase()) {
+                alert('⚠️ El nombre debe ser diferente al cliente existente.\n\nPor favor agrega un distintivo, por ejemplo:\n• "' + name + ' - Casa"\n• "' + name + ' - Trabajo"\n• "' + name + ' - Oficina"');
+                return;
+            }
+
+            // Verificar que tenga algún distintivo (guión o paréntesis)
+            if (!name.includes('-') && !name.includes('(')) {
+                alert('⚠️ Por favor agrega un distintivo al nombre para diferenciarlo del cliente existente.\n\nEjemplos:\n• "' + name + ' - Casa"\n• "' + name + ' - Trabajo"\n• "' + name + ' (Oficina)"');
+                return;
+            }
         }
 
         const clientData = {
@@ -3236,25 +3254,33 @@
                 const longitude = document.getElementById('modal-client-longitude').value;
 
                 try {
-                    // Verificar si el cliente ya existe
-                    const existingClient = db.clients.find(c =>
-                        c.name.toLowerCase() === name.toLowerCase() ||
-                        (phone && c.phone === phone)
-                    );
-
-                    if (existingClient) {
-                        alert(`⚠️ Ya existe un cliente con ese nombre o teléfono.\n\nNombre: ${existingClient.name}\nTeléfono: ${existingClient.phone || 'Sin teléfono'}\n\nSe seleccionará el cliente existente.`);
-
-                        // Usar el cliente existente
-                        selectedClientData = existingClient;
-                        const clientInput = document.getElementById('client-name');
-                        const displayName = existingClient.type === 'negocio' && existingClient.businessName ? existingClient.businessName : existingClient.name;
-                        clientInput.value = displayName;
-
-                        // Cerrar modal
-                        document.getElementById('create-client-modal').classList.add('hidden');
-                        modalForm.reset();
+                    if (!phone) {
+                        alert('El número de celular es obligatorio');
                         return;
+                    }
+
+                    // Verificar si ya existe un cliente con ese número de teléfono
+                    const existingClientByPhone = db.clients.find(c => c.phone === phone);
+
+                    if (existingClientByPhone) {
+                        // Preguntar si desea continuar
+                        const continuar = confirm(`⚠️ Este número ya está registrado para otro cliente:\n\nNombre: ${existingClientByPhone.name}\nTeléfono: ${existingClientByPhone.phone}\n\n¿Deseas continuar de todas formas?`);
+
+                        if (!continuar) {
+                            return; // El usuario canceló
+                        }
+
+                        // Si continúa, verificar que el nombre sea diferente y tenga un distintivo
+                        if (name.toLowerCase() === existingClientByPhone.name.toLowerCase()) {
+                            alert('⚠️ El nombre debe ser diferente al cliente existente.\n\nPor favor agrega un distintivo, por ejemplo:\n• "' + name + ' - Casa"\n• "' + name + ' - Trabajo"\n• "' + name + ' - Oficina"');
+                            return;
+                        }
+
+                        // Verificar que tenga algún distintivo (guión o paréntesis)
+                        if (!name.includes('-') && !name.includes('(')) {
+                            alert('⚠️ Por favor agrega un distintivo al nombre para diferenciarlo del cliente existente.\n\nEjemplos:\n• "' + name + ' - Casa"\n• "' + name + ' - Trabajo"\n• "' + name + ' (Oficina)"');
+                            return;
+                        }
                     }
 
                     const newClient = {
